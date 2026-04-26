@@ -4,7 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 
 // POST /api/auth/register
 const register = asyncHandler(async (req, res) => {
-  const { name, email, password, role, department, studentId } = req.body;
+  const { fullName, email, password, role, department, studentId } = req.body;
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
@@ -12,16 +12,18 @@ const register = asyncHandler(async (req, res) => {
     throw new Error('Email already registered');
   }
 
-  const user = await User.create({ name, email, password, role, department, studentId });
+  const user = await User.create({ fullName, email, password, role, department, studentId });
 
   res.status(201).json({
     success: true,
     token: generateToken(user),
     user: {
       id: user._id,
-      name: user.name,
+      fullName: user.fullName,
       email: user.email,
       role: user.role,
+      department: user.department,
+      status: user.status,
     },
   });
 });
@@ -41,16 +43,38 @@ const login = asyncHandler(async (req, res) => {
     throw new Error('Account is deactivated');
   }
 
+  user.lastLogin = new Date();
+  await user.save();
+
   res.json({
     success: true,
     token: generateToken(user),
     user: {
       id: user._id,
-      name: user.name,
+      fullName: user.fullName,
       email: user.email,
       role: user.role,
+      department: user.department,
+      status: user.status,
     },
   });
 });
 
-module.exports = { register, login };
+// GET /api/auth/me
+const getMe = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  res.json({
+    success: true,
+    user: {
+      id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
+      department: user.department,
+      status: user.status,
+    },
+  });
+});
+
+module.exports = { register, login, getMe };
