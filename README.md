@@ -89,20 +89,19 @@ labtrack-backend/
 │   ├── models/
 │   │   ├── User.js
 │   │   ├── Course.js
-│   │   ├── Lab.js
-│   │   ├── TestCase.js
-│   │   ├── Submission.js
+│   │   ├── Lab.js                 # embeds testCases + solutions
+│   │   ├── Submission.js          # embeds testResults + rubric
 │   │   └── Version.js
 │   ├── routes/
 │   │   ├── auth.routes.js
-│   │   ├── student.routes.js
 │   │   ├── compile.routes.js
+│   │   ├── student.routes.js      # 🔲 not wired in app.js yet
 │   │   ├── instructor.routes.js   # 🔲 in progress
 │   │   └── admin.routes.js        # 🔲 in progress
 │   ├── controllers/
 │   │   ├── auth.controller.js
-│   │   ├── student.controller.js
 │   │   ├── compile.controller.js
+│   │   ├── student.controller.js  # 🔲 not wired in app.js yet
 │   │   ├── instructor.controller.js  # 🔲 in progress
 │   │   └── admin.controller.js       # 🔲 in progress
 │   ├── services/
@@ -124,49 +123,20 @@ labtrack-backend/
 ## API Reference
 
 ### Auth
+
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
 | POST | `/api/auth/register` | Public | Register new user |
 | POST | `/api/auth/login` | Public | Login and get JWT token |
-
-### Student
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| GET | `/api/student/courses` | Student | Get enrolled courses |
-| GET | `/api/student/courses/:courseId/labs` | Student | Get labs for a course |
-| GET | `/api/student/labs/:labId` | Student | Get lab details |
-| POST | `/api/student/submit` | Student | Submit code for a lab |
-| GET | `/api/student/grades` | Student | Get all graded submissions |
-| POST | `/api/student/versions` | Student | Save a code version |
-| GET | `/api/student/versions/:labId` | Student | Get version history |
+| GET | `/api/auth/me` | Authenticated | Get current user |
 
 ### Compile
+
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
 | POST | `/api/compile` | Authenticated | Run code via JDoodle API |
 
-### Instructor *(in progress)*
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| POST | `/api/instructor/labs` | Instructor | Create a new lab |
-| PATCH | `/api/instructor/labs/:id/publish` | Instructor | Publish lab to students |
-| POST | `/api/instructor/labs/:id/testcases` | Instructor | Add test case to lab |
-| GET | `/api/instructor/submissions/:labId` | Instructor | View all submissions |
-| GET | `/api/instructor/submissions/:labId/stats` | Instructor | Submission statistics |
-| PATCH | `/api/instructor/grade/:submissionId` | Instructor | Grade a submission |
-| POST | `/api/instructor/bulk-grade` | Instructor | Bulk grade submissions |
-
-### Admin *(in progress)*
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| POST | `/api/admin/users` | Admin | Create single user |
-| POST | `/api/admin/users/bulk` | Admin | Bulk import users via CSV |
-| GET | `/api/admin/users` | Admin | List all users |
-| PATCH | `/api/admin/users/:id` | Admin | Update user |
-| DELETE | `/api/admin/users/:id` | Admin | Deactivate user |
-| POST | `/api/admin/courses` | Admin | Create course and sections |
-| POST | `/api/admin/enroll` | Admin | Enroll students into a course |
-| GET | `/api/admin/system` | Admin | System health metrics |
+### Student, Instructor, Admin *(not wired yet — see [Checklist.md](./Checklist.md))*
 
 ---
 
@@ -180,20 +150,21 @@ labtrack-backend/
 ## Implementation Progress
 
 ### ✅ Complete
+
 - [x] Project setup — Express, MongoDB Atlas, folder structure
 - [x] User model with bcrypt password hashing
-- [x] JWT authentication — register + login
+- [x] JWT authentication — register, login, `/me`
 - [x] Auth middleware — protects all routes
 - [x] Role middleware — student / instructor / admin access control
-- [x] All Mongoose models — User, Course, Lab, TestCase, Submission, Version
-- [x] Student routes — courses, labs, submit, grades, versions
+- [x] Mongoose models — User, Course, Lab (embeds testCases + solutions), Submission (embeds testResults + rubric), Version
 - [x] JDoodle compile service — run code in sandbox
 - [x] `POST /api/compile` — working with Python, C++, Java, C
 
 ### 🔲 In Progress / Not Started
+
+- [ ] Wire student routes into app.js (courses, labs, submit, grades, versions)
 - [ ] Test runner service — run test cases, compare output, calculate score
-- [ ] Wire test runner into submit flow
-- [ ] Instructor routes — create lab, test cases, grade, analytics
+- [ ] Instructor routes — create lab, grading, analytics
 - [ ] Admin routes — user management, course setup, enrollment
 - [ ] Email service — Nodemailer notifications
 - [ ] Email triggers — new lab, graded submission, welcome email
