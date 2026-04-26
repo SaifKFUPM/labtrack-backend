@@ -1,5 +1,7 @@
 # LabTrack — Backend Implementation Checklist
 
+> **Team notice:** If you implement or finish any endpoint, please check it off in this file and update the progress table. Commit the updated checklist along with your code so the team always has an accurate count. Don't wait — check it off as soon as it's done.
+
 All endpoints are mapped directly from the frontend source code.  
 Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-have
 
