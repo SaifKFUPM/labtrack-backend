@@ -170,6 +170,13 @@ labtrack-backend/
 
 ---
 
+## Contributing
+
+> **Before you start:** check [Checklist.md](./Checklist.md) to see what's already done and what's available to pick up.
+> **When you finish something:** mark it off in `Checklist.md`, update the progress table, and commit the checklist alongside your code.
+
+---
+
 ## Implementation Progress
 
 ### ✅ Complete
