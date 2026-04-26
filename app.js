@@ -1,5 +1,4 @@
 const compileRoutes = require('./src/routes/compile.routes');
-const studentRoutes = require('./src/routes/student.routes');
 const authRoutes = require('./src/routes/auth.routes');
 const express = require('express');
 const cors = require('cors');
@@ -21,7 +20,9 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/compile', compileRoutes);
-app.use('/api/student', studentRoutes);
+// app.use('/api/labs', labRoutes);
+// app.use('/api/submissions', submissionRoutes);
+// app.use('/api/courses', courseRoutes);
 app.use(errorMiddleware);
 
 module.exports = app;
