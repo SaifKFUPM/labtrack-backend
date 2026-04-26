@@ -9,7 +9,7 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 
 | Group | Done | Total |
 |---|---|---|
-| Auth | 2 / 3 | |
+| Auth | 3 / 3 | |
 | Student — Labs | 0 / 4 | |
 | Student — Submissions | 0 / 2 | |
 | Student — Progress | 0 / 2 | |
@@ -27,7 +27,7 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 | Admin — System | 0 / 8 | |
 | Admin — Security | 0 / 4 | |
 | Admin — Analytics | 0 / 3 | |
-| **Total** | **2 / 58** | |
+| **Total** | **3 / 58** | |
 
 ---
 
@@ -35,7 +35,7 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 
 - [x] 🔴 `POST /api/auth/register` — body: `{ fullName, email, password, role }` — returns `{ user, token }`
 - [x] 🔴 `POST /api/auth/login` — body: `{ email, password }` — returns `{ user, token }`
-- [ ] 🔴 `GET /api/auth/me` — returns `{ id, fullName, email, role, department, status }`
+- [x] 🔴 `GET /api/auth/me` — returns `{ id, fullName, email, role, department, status }`
 
 > Response user shape must always be: `{ id, fullName, email, role, department, status }`
 
