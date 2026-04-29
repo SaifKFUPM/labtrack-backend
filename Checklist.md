@@ -18,18 +18,18 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 | Student — Versions       | 2 / 2       | ✅    |
 | Student — Grades         | 1 / 1       | ✅    |
 | Student — Courses        | 1 / 1       | ✅    |
-| Student — Peer Reviews   | 0 / 5       |       |
+| Student — Peer Reviews   | 5 / 5       | ✅    |
 | Instructor — Labs        | 5 / 5       | ✅    |
-| Instructor — Submissions | 0 / 3       |       |
-| Instructor — Plagiarism  | 0 / 3       |       |
-| Instructor — Analytics   | 0 / 1       |       |
+| Instructor — Submissions | 3 / 3       | ✅    |
+| Instructor — Plagiarism  | 3 / 3       | ✅    |
+| Instructor — Analytics   | 1 / 1       | ✅    |
 | Admin — Users            | 4 / 4       | ✅    |
 | Admin — Courses          | 4 / 4       | ✅    |
 | Admin — Departments      | 3 / 3       | ✅    |
 | Admin — System           | 9 / 9       | ✅    |
 | Admin — Security         | 4 / 4       | ✅    |
 | Admin — Analytics        | 3 / 3       | ✅    |
-| **Total**                | **42 / 58** |       |
+| **Total**                | **58 / 58** |       |
 
 ---
 
