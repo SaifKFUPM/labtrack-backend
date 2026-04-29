@@ -1,5 +1,24 @@
 const User = require('../models/User');
+const Course = require('../models/Course');
 const asyncHandler = require('../utils/asyncHandler');
+
+const formatCourse = (c) => ({
+  id: c._id,
+  courseCode: c.code,
+  name: c.name,
+  department: c.department,
+  creditHours: c.creditHours,
+  semester: c.semester,
+  sections: (c.sections || []).map((s) => ({
+    sectionNumber: s.sectionNumber,
+    instructorId: s.instructor,
+    enrolledStudentIds: s.students,
+    meetingDays: s.meetingTimes,
+    capacity: s.capacity,
+  })),
+  active: c.active,
+  createdAt: c.createdAt,
+});
 
 // ─── User Management ──────────────────────────────────────────────────────────
 
@@ -101,9 +120,89 @@ const deleteUser = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'User deactivated' });
 });
 
+// ─── Course Management ────────────────────────────────────────────────────────
+
+// GET /api/admin/courses
+const getCourses = asyncHandler(async (req, res) => {
+  const courses = await Course.find().sort({ code: 1 });
+  res.json({ success: true, data: courses.map(formatCourse) });
+});
+
+// POST /api/admin/courses
+const createCourse = asyncHandler(async (req, res) => {
+  const { courseCode, name, department, creditHours, semester, sections } = req.body;
+
+  if (!courseCode || !name || !department || !semester) {
+    res.status(400);
+    throw new Error('courseCode, name, department, and semester are required');
+  }
+
+  const mappedSections = (sections || []).map((s) => ({
+    sectionNumber: s.sectionNumber,
+    instructor: s.instructorId,
+    students: s.enrolledStudentIds || [],
+    capacity: s.capacity,
+    meetingTimes: s.meetingDays,
+  }));
+
+  const course = await Course.create({
+    code: courseCode,
+    name,
+    department,
+    creditHours,
+    semester,
+    sections: mappedSections,
+  });
+
+  res.status(201).json({ success: true, data: formatCourse(course) });
+});
+
+// PATCH /api/admin/courses/:courseId
+const updateCourse = asyncHandler(async (req, res) => {
+  const { courseCode, name, department, creditHours, semester, sections } = req.body;
+
+  const course = await Course.findById(req.params.courseId);
+  if (!course) {
+    res.status(404);
+    throw new Error('Course not found');
+  }
+
+  if (courseCode !== undefined) course.code = courseCode;
+  if (name !== undefined) course.name = name;
+  if (department !== undefined) course.department = department;
+  if (creditHours !== undefined) course.creditHours = creditHours;
+  if (semester !== undefined) course.semester = semester;
+  if (sections !== undefined) {
+    course.sections = sections.map((s) => ({
+      sectionNumber: s.sectionNumber,
+      instructor: s.instructorId,
+      students: s.enrolledStudentIds || [],
+      capacity: s.capacity,
+      meetingTimes: s.meetingDays,
+    }));
+  }
+
+  await course.save();
+  res.json({ success: true, data: formatCourse(course) });
+});
+
+// DELETE /api/admin/courses/:courseId
+const deleteCourse = asyncHandler(async (req, res) => {
+  const course = await Course.findByIdAndDelete(req.params.courseId);
+  if (!course) {
+    res.status(404);
+    throw new Error('Course not found');
+  }
+  res.json({ success: true, message: 'Course deleted' });
+});
+
 module.exports = {
   getUsers,
   createUser,
   updateUser,
   deleteUser,
+  getCourses,
+  createCourse,
+  updateCourse,
+  deleteCourse,
 };
