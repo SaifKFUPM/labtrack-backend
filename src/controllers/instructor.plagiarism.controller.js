@@ -1,6 +1,6 @@
-const asyncHandler = require('../utils/asyncHandler');
-const Submission = require('../models/Submission');
-const Lab = require('../models/Lab');
+const asyncHandler = require("../utils/asyncHandler");
+const Submission = require("../models/Submission");
+const Lab = require("../models/Lab");
 
 // POST /api/instructor/labs/:labId/check-plagiarism
 const checkPlagiarism = asyncHandler(async (req, res) => {
@@ -8,11 +8,11 @@ const checkPlagiarism = asyncHandler(async (req, res) => {
   const lab = await Lab.findById(labId);
   if (!lab) {
     res.status(404);
-    throw new Error('Lab not found');
+    throw new Error("Lab not found");
   }
   if (lab.createdBy.toString() !== req.user._id.toString()) {
     res.status(403);
-    throw new Error('Not authorized');
+    throw new Error("Not authorized");
   }
 
   // Simple stub: compare code strings pairwise and compute naive similarity
@@ -20,11 +20,25 @@ const checkPlagiarism = asyncHandler(async (req, res) => {
   const pairs = [];
   for (let i = 0; i < subs.length; i++) {
     for (let j = i + 1; j < subs.length; j++) {
-      const a = subs[i].code || '';
-      const b = subs[j].code || '';
-      const sim = a && b ? (a === b ? 100 : Math.round((a.split(' ').filter(w=>b.includes(w)).length / Math.max(a.split(' ').length,1))*100)) : 0;
+      const a = subs[i].code || "";
+      const b = subs[j].code || "";
+      const sim =
+        a && b
+          ? a === b
+            ? 100
+            : Math.round(
+                (a.split(" ").filter((w) => b.includes(w)).length /
+                  Math.max(a.split(" ").length, 1)) *
+                  100,
+              )
+          : 0;
       if (sim > 10) {
-        pairs.push({ studentAId: subs[i].studentId, studentBId: subs[j].studentId, similarity: sim, flagged: sim > 70 });
+        pairs.push({
+          studentAId: subs[i].studentId,
+          studentBId: subs[j].studentId,
+          similarity: sim,
+          flagged: sim > 70,
+        });
       }
     }
   }
