@@ -3,6 +3,7 @@ const Course = require("../models/Course");
 const Lab = require("../models/Lab");
 const Submission = require("../models/Submission");
 const Version = require("../models/Version");
+const Progress = require("../models/Progress");
 const asyncHandler = require("../utils/asyncHandler");
 
 // GET /api/student/courses?enrolled=true
@@ -153,6 +154,56 @@ const getGrades = asyncHandler(async (req, res) => {
   res.json({ success: true, data: formatted });
 });
 
+// GET /api/student/submissions/:labId
+const getSubmissionDetails = asyncHandler(async (req, res) => {
+  const { labId } = req.params;
+
+  const submission = await Submission.findOne({ labId, studentId: req.user._id }).populate('labId', 'title points');
+
+  if (!submission) {
+    res.status(404);
+    throw new Error('Submission not found');
+  }
+
+  res.json({ success: true, data: submission });
+});
+
+// GET /api/progress
+const getProgress = asyncHandler(async (req, res) => {
+  const progress = await Progress.find({ studentId: req.user._id }).sort({ updatedAt: -1 });
+
+  const mapped = progress.reduce((acc, p) => {
+    acc[p.labId] = {
+      status: p.status,
+      submittedAt: p.submittedAt,
+      score: p.score,
+    };
+    return acc;
+  }, {});
+
+  res.json({ success: true, data: mapped });
+});
+
+// PATCH /api/progress/:labId
+const updateProgress = asyncHandler(async (req, res) => {
+  const { labId } = req.params;
+  const { status, code, submittedAt } = req.body;
+
+  const allowedStatuses = ['not started','in progress','submitted','graded'];
+  if (status && !allowedStatuses.includes(status)) {
+    res.status(400);
+    throw new Error('Invalid status');
+  }
+
+  const prog = await Progress.findOneAndUpdate(
+    { labId, studentId: req.user._id },
+    { $set: { status: status || undefined, code: code || undefined, submittedAt: submittedAt || undefined } },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+
+  res.json({ success: true, data: prog });
+});
+
 // GET /api/student/labs/:labId/versions
 const getVersions = asyncHandler(async (req, res) => {
   const submission = await Submission.findOne({
@@ -233,6 +284,9 @@ module.exports = {
   getLabById,
   submitLabCode,
   getGrades,
+  getSubmissionDetails,
+  getProgress,
+  updateProgress,
   saveVersion,
   getVersions,
 };
