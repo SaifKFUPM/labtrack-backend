@@ -5,44 +5,49 @@ const Submission = require('../models/Submission');
 const Version = require('../models/Version');
 const asyncHandler = require('../utils/asyncHandler');
 
-// GET /api/student/courses
+// GET /api/student/courses?enrolled=true
 const getCourses = asyncHandler(async (req, res) => {
-  const courses = await Course.find({
-    'sections.students': req.user._id,
-    active: true,
-  }).populate('sections.instructor', 'name email');
+  const enrolledOnly = req.query.enrolled === 'true';
+  const query = enrolledOnly
+    ? { 'sections.students': req.user._id, active: true }
+    : { active: true };
+
+  const courses = await Course.find(query).sort({ courseCode: 1 });
 
   res.json({ success: true, data: courses });
 });
 
-// GET /api/student/courses/:courseId/labs
+// GET /api/student/labs?status=active
 const getLabs = asyncHandler(async (req, res) => {
-  const course = await Course.findOne({
-    _id: req.params.courseId,
-    'sections.students': req.user._id,
-  });
+  const status = req.query.status || 'active';
 
-  if (!course) {
-    res.status(404);
-    throw new Error('Course not found or you are not enrolled');
+  const enrolledCourses = await Course.find({
+    'sections.students': req.user._id,
+    active: true,
+  }).select('_id');
+
+  if (!enrolledCourses.length) {
+    return res.json({ success: true, data: [] });
   }
 
+  const courseIds = enrolledCourses.map((course) => course._id);
+
   const labs = await Lab.find({
-    courseId: req.params.courseId,
-    status: 'active',
+    courseId: { $in: courseIds },
+    status,
   }).sort({ dueDate: 1 });
 
-  // attach each lab's submission status for this student
   const labsWithStatus = await Promise.all(
     labs.map(async (lab) => {
       const submission = await Submission.findOne({
         studentId: req.user._id,
         labId: lab._id,
       });
+
       return {
         ...lab.toObject(),
         submissionStatus: submission ? submission.status : 'not started',
-        totalScore: submission ? submission.totalScore : null,
+        submittedAt: submission ? submission.submittedAt : null,
       };
     })
   );
@@ -52,24 +57,52 @@ const getLabs = asyncHandler(async (req, res) => {
 
 // GET /api/student/labs/:labId
 const getLabById = asyncHandler(async (req, res) => {
-  const lab = await Lab.findById(req.params.labId).populate('courseId', 'code name');
+  const lab = await Lab.findById(req.params.labId);
 
-  if (!lab || lab.status !== 'active') {
+  if (!lab) {
     res.status(404);
     throw new Error('Lab not found');
+  }
+
+  const allowedCourse = await Course.findOne({
+    _id: lab.courseId,
+    'sections.students': req.user._id,
+    active: true,
+  });
+
+  if (!allowedCourse) {
+    res.status(403);
+    throw new Error('You do not have access to this lab');
   }
 
   res.json({ success: true, data: lab });
 });
 
-// POST /api/student/submit
-const submitLab = asyncHandler(async (req, res) => {
-  const { labId, code, language } = req.body;
+// POST /api/student/submissions/:labId
+const submitLabCode = asyncHandler(async (req, res) => {
+  const { code, language } = req.body;
+  const { labId } = req.params;
+
+  if (!code || !language) {
+    res.status(400);
+    throw new Error('Code and language are required');
+  }
 
   const lab = await Lab.findById(labId);
-  if (!lab || lab.status !== 'active') {
+  if (!lab) {
     res.status(404);
     throw new Error('Lab not found');
+  }
+
+  const allowedCourse = await Course.findOne({
+    _id: lab.courseId,
+    'sections.students': req.user._id,
+    active: true,
+  });
+
+  if (!allowedCourse) {
+    res.status(403);
+    throw new Error('You do not have access to this lab');
   }
 
   const submission = await Submission.findOneAndUpdate(
@@ -83,10 +116,16 @@ const submitLab = asyncHandler(async (req, res) => {
     { upsert: true, new: true }
   );
 
-  // auto-run tests after submission
   const testResults = await runTests(submission._id);
 
-  res.json({ success: true, data: { submission, testResults } });
+  res.json({
+    success: true,
+    data: {
+      id: submission._id,
+      status: submission.status,
+      testResults,
+    },
+  });
 });
 
 // GET /api/student/grades
@@ -94,43 +133,62 @@ const getGrades = asyncHandler(async (req, res) => {
   const submissions = await Submission.find({
     studentId: req.user._id,
     status: 'graded',
-  }).populate('labId', 'title totalPoints dueDate');
+  })
+    .populate('labId', 'title points dueDate')
+    .sort({ submittedAt: -1 });
 
-  res.json({ success: true, data: submissions });
+  const formatted = submissions.map((sub) => ({
+    id: sub._id,
+    lab: sub.labId?.title || null,
+    score: sub.score,
+    testsPassed: (sub.testResults || []).filter((result) => result.passed).length,
+    testsTotal: (sub.testResults || []).length,
+    grade: sub.rubric,
+    feedback: sub.overallFeedback,
+    status: sub.status,
+    submittedAt: sub.submittedAt,
+  }));
+
+  res.json({ success: true, data: formatted });
 });
 
-// POST /api/student/versions
-const saveVersion = asyncHandler(async (req, res) => {
-  const { submissionId, code, description } = req.body;
-
+// GET /api/student/labs/:labId/versions
+const getVersions = asyncHandler(async (req, res) => {
   const submission = await Submission.findOne({
-    _id: submissionId,
+    labId: req.params.labId,
     studentId: req.user._id,
   });
 
   if (!submission) {
-    res.status(404);
-    throw new Error('Submission not found');
+    return res.json({ success: true, data: [] });
   }
 
-  const lastVersion = await Version.findOne({ submissionId }).sort({ versionNumber: -1 });
+  const versions = await Version.find({ submissionId: submission._id })
+    .sort({ versionNumber: -1 })
+    .select('versionNumber code description createdAt');
 
-  if (lastVersion && lastVersion.code === code) {
-    res.status(400);
-    throw new Error('No changes detected since last version');
-  }
+  const formatted = versions.map((version) => ({
+    version: version.versionNumber,
+    code: version.code,
+    timestamp: version.createdAt,
+    description: version.description,
+  }));
 
-  const versionNumber = lastVersion ? lastVersion.versionNumber + 1 : 1;
-
-  const version = await Version.create({ submissionId, code, description, versionNumber });
-
-  res.status(201).json({ success: true, data: version });
+  res.json({ success: true, data: formatted });
 });
 
-// GET /api/student/versions/:labId
-const getVersions = asyncHandler(async (req, res) => {
+// POST /api/student/labs/:labId/versions
+const saveVersion = asyncHandler(async (req, res) => {
+  const { code, description } = req.body;
+  const { labId } = req.params;
+
+  if (!code) {
+    res.status(400);
+    throw new Error('Code is required');
+  }
+
   const submission = await Submission.findOne({
-    labId: req.params.labId,
+    labId,
     studentId: req.user._id,
   });
 
@@ -139,9 +197,39 @@ const getVersions = asyncHandler(async (req, res) => {
     throw new Error('No submission found for this lab');
   }
 
-  const versions = await Version.find({ submissionId: submission._id }).sort({ versionNumber: -1 });
+  const lastVersion = await Version.findOne({ submissionId: submission._id }).sort({ versionNumber: -1 });
 
-  res.json({ success: true, data: versions });
+  if (lastVersion && lastVersion.code === code) {
+    res.status(400);
+    throw new Error('No changes detected since last version');
+  }
+
+  const nextVersion = lastVersion ? lastVersion.versionNumber + 1 : 1;
+
+  const version = await Version.create({
+    submissionId: submission._id,
+    code,
+    description: description || `Version ${nextVersion}`,
+    versionNumber: nextVersion,
+  });
+
+  res.status(201).json({
+    success: true,
+    data: {
+      version: version.versionNumber,
+      code: version.code,
+      timestamp: version.createdAt,
+      description: version.description,
+    },
+  });
 });
 
-module.exports = { getCourses, getLabs, getLabById, submitLab, getGrades, saveVersion, getVersions };
+module.exports = {
+  getCourses,
+  getLabs,
+  getLabById,
+  submitLabCode,
+  getGrades,
+  saveVersion,
+  getVersions,
+};

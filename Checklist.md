@@ -12,12 +12,12 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 | Group | Done | Total |
 |---|---|---|
 | Auth | 3 / 3 | |
-| Student — Labs | 0 / 4 | |
-| Student — Submissions | 0 / 2 | |
+| Student — Labs | 4 / 4 | ✅ |
+| Student — Submissions | 1 / 2 | |
 | Student — Progress | 0 / 2 | |
 | Student — Versions | 0 / 2 | |
-| Student — Grades | 0 / 1 | |
-| Student — Courses | 0 / 1 | |
+| Student — Grades | 1 / 1 | ✅ |
+| Student — Courses | 1 / 1 | ✅ |
 | Student — Peer Reviews | 0 / 5 | |
 | Instructor — Labs | 0 / 5 | |
 | Instructor — Submissions | 0 / 3 | |
@@ -29,7 +29,7 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 | Admin — System | 0 / 8 | |
 | Admin — Security | 0 / 4 | |
 | Admin — Analytics | 0 / 3 | |
-| **Total** | **3 / 58** | |
+| **Total** | **10 / 58** | |
 
 ---
 
@@ -45,17 +45,17 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 
 ## STUDENT — Labs
 
-- [ ] 🔴 `GET /api/labs` — query: `?status=active` — returns array of labs with `{ id, title, labNumber, language, dueDate, status, points, difficulty, description, starterCode, testCases, solutions }`
-- [ ] 🔴 `GET /api/labs/:labId` — returns single lab, same shape
-- [ ] 🔴 `GET /api/labs/:labId/versions` — returns `[{ version, code, timestamp }]`
-- [ ] 🔴 `POST /api/labs/:labId/versions` — body: `{ code, timestamp }` — saves version
+- [x] 🔴 `GET /api/student/labs` — query: `?status=active` — returns array of labs with `{ id, title, labNumber, language, dueDate, status, points, difficulty, description, starterCode, testCases, solutions }`
+- [x] 🔴 `GET /api/student/labs/:labId` — returns single lab, same shape
+- [x] 🔴 `GET /api/student/labs/:labId/versions` — returns `[{ version, code, timestamp }]`
+- [x] 🔴 `POST /api/student/labs/:labId/versions` — body: `{ code, timestamp }` — saves version
 
 ---
 
 ## STUDENT — Submissions
 
-- [ ] 🔴 `POST /api/submissions/:labId` — body: `{ code, language }` — runs tests, returns `{ id, status, testResults }`
-- [ ] 🔴 `GET /api/grades` — returns `[{ id, lab, score, testsPassed, testsTotal, grade, feedback, status, submittedAt }]`
+- [x] 🔴 `POST /api/student/submissions/:labId` — body: `{ code, language }` — runs tests, returns `{ id, status, testResults }`
+- [ ] 🔴 `GET /api/student/submissions/:labId` — get submission details
 
 ---
 
@@ -68,7 +68,13 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 
 ## STUDENT — Courses
 
-- [ ] 🔴 `GET /api/courses` — query: `?enrolled=true` — returns `[{ id, courseCode, name, sections[{ enrolledStudentIds }] }]`
+- [x] 🔴 `GET /api/student/courses` — query: `?enrolled=true` — returns `[{ id, courseCode, name, sections[{ enrolledStudentIds }] }]`
+
+---
+
+## STUDENT — Grades
+
+- [x] 🔴 `GET /api/student/grades` — returns `[{ id, lab, score, testsPassed, testsTotal, grade, feedback, status, submittedAt }]`
 
 ---
 

@@ -1,5 +1,4 @@
 const { compileCode } = require('./compile.service');
-const TestCase = require('../models/TestCase');
 const Submission = require('../models/Submission');
 const Lab = require('../models/Lab');
 
@@ -10,9 +9,9 @@ const runTests = async (submissionId) => {
   const lab = await Lab.findById(submission.labId);
   if (!lab) throw new Error('Lab not found');
 
-  const testCases = await TestCase.find({ labId: submission.labId });
+  const testCases = lab.testCases || [];
   if (testCases.length === 0) {
-    return { passed: 0, total: 0, score: 0, results: [] };
+    return { passed: 0, total: 0, score: 0, maxScore: lab.points, results: [] };
   }
 
   let passed = 0;
@@ -65,12 +64,15 @@ const runTests = async (submissionId) => {
     });
   }
 
-  const score = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * lab.totalPoints) : 0;
+  const score = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * lab.points) : 0;
 
-  // save score back to submission
-  await Submission.findByIdAndUpdate(submissionId, { testScore: score, totalScore: score });
+  await Submission.findByIdAndUpdate(submissionId, {
+    testResults: results,
+    score,
+    maxScore: lab.points,
+  });
 
-  return { passed, total: testCases.length, score, totalPoints: lab.totalPoints, results };
+  return { passed, total: testCases.length, score, maxScore: lab.points, results };
 };
 
 module.exports = { runTests };

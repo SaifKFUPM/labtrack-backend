@@ -95,18 +95,18 @@ labtrack-backend/
 │   ├── routes/
 │   │   ├── auth.routes.js
 │   │   ├── compile.routes.js
-│   │   ├── student.routes.js      # 🔲 not wired in app.js yet
+│   │   ├── student.routes.js      # ✅ wired in app.js
 │   │   ├── instructor.routes.js   # 🔲 in progress
 │   │   └── admin.routes.js        # 🔲 in progress
 │   ├── controllers/
 │   │   ├── auth.controller.js
 │   │   ├── compile.controller.js
-│   │   ├── student.controller.js  # 🔲 not wired in app.js yet
+│   │   ├── student.controller.js  # ✅ core student endpoints implemented
 │   │   ├── instructor.controller.js  # 🔲 in progress
 │   │   └── admin.controller.js       # 🔲 in progress
 │   ├── services/
 │   │   ├── compile.service.js     # JDoodle API wrapper
-│   │   ├── testRunner.service.js  # 🔲 in progress
+│   │   ├── testRunner.service.js  # ✅ executes embedded lab testCases
 │   │   └── email.service.js       # 🔲 in progress
 │   └── utils/
 │       ├── asyncHandler.js
@@ -136,7 +136,19 @@ labtrack-backend/
 |---|---|---|---|
 | POST | `/api/compile` | Authenticated | Run code via JDoodle API |
 
-### Student, Instructor, Admin *(not wired yet — see [Checklist.md](./Checklist.md))*
+### Student (wired)
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| GET | `/api/student/courses?enrolled=true` | Student | Get enrolled courses |
+| GET | `/api/student/labs?status=active` | Student | Get active labs for enrolled courses |
+| GET | `/api/student/labs/:labId` | Student | Get single lab details |
+| POST | `/api/student/submissions/:labId` | Student | Submit code and run tests |
+| GET | `/api/student/labs/:labId/versions` | Student | Get submission version history |
+| POST | `/api/student/labs/:labId/versions` | Student | Save a new code version |
+| GET | `/api/student/grades` | Student | Get graded submissions |
+
+### Instructor, Admin *(in progress — see [Checklist.md](./Checklist.md))*
 
 ---
 
@@ -162,8 +174,8 @@ labtrack-backend/
 
 ### 🔲 In Progress / Not Started
 
-- [ ] Wire student routes into app.js (courses, labs, submit, grades, versions)
-- [ ] Test runner service — run test cases, compare output, calculate score
+- [x] Wire student routes into app.js (courses, labs, submit, grades, versions)
+- [x] Test runner service — run test cases, compare output, calculate score
 - [ ] Instructor routes — create lab, grading, analytics
 - [ ] Admin routes — user management, course setup, enrollment
 - [ ] Email service — Nodemailer notifications

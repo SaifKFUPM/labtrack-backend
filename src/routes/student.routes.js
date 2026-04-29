@@ -1,4 +1,3 @@
-const { runTests } = require('../services/testRunner.service');
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
@@ -7,7 +6,7 @@ const {
   getCourses,
   getLabs,
   getLabById,
-  submitLab,
+  submitLabCode,
   getGrades,
   saveVersion,
   getVersions,
@@ -17,11 +16,11 @@ router.use(authMiddleware);
 router.use(checkRole('student'));
 
 router.get('/courses', getCourses);
-router.get('/courses/:courseId/labs', getLabs);
+router.get('/labs', getLabs);
 router.get('/labs/:labId', getLabById);
-router.post('/submit', submitLab);
+router.post('/submissions/:labId', submitLabCode);
 router.get('/grades', getGrades);
-router.post('/versions', saveVersion);
-router.get('/versions/:labId', getVersions);
+router.post('/labs/:labId/versions', saveVersion);
+router.get('/labs/:labId/versions', getVersions);
 
 module.exports = router;
