@@ -1,15 +1,15 @@
-const { runTests } = require('../services/testRunner.service');
-const Course = require('../models/Course');
-const Lab = require('../models/Lab');
-const Submission = require('../models/Submission');
-const Version = require('../models/Version');
-const asyncHandler = require('../utils/asyncHandler');
+const { runTests } = require("../services/testRunner.service");
+const Course = require("../models/Course");
+const Lab = require("../models/Lab");
+const Submission = require("../models/Submission");
+const Version = require("../models/Version");
+const asyncHandler = require("../utils/asyncHandler");
 
 // GET /api/student/courses?enrolled=true
 const getCourses = asyncHandler(async (req, res) => {
-  const enrolledOnly = req.query.enrolled === 'true';
+  const enrolledOnly = req.query.enrolled === "true";
   const query = enrolledOnly
-    ? { 'sections.students': req.user._id, active: true }
+    ? { "sections.students": req.user._id, active: true }
     : { active: true };
 
   const courses = await Course.find(query).sort({ courseCode: 1 });
@@ -19,12 +19,12 @@ const getCourses = asyncHandler(async (req, res) => {
 
 // GET /api/student/labs?status=active
 const getLabs = asyncHandler(async (req, res) => {
-  const status = req.query.status || 'active';
+  const status = req.query.status || "active";
 
   const enrolledCourses = await Course.find({
-    'sections.students': req.user._id,
+    "sections.students": req.user._id,
     active: true,
-  }).select('_id');
+  }).select("_id");
 
   if (!enrolledCourses.length) {
     return res.json({ success: true, data: [] });
@@ -46,10 +46,10 @@ const getLabs = asyncHandler(async (req, res) => {
 
       return {
         ...lab.toObject(),
-        submissionStatus: submission ? submission.status : 'not started',
+        submissionStatus: submission ? submission.status : "not started",
         submittedAt: submission ? submission.submittedAt : null,
       };
-    })
+    }),
   );
 
   res.json({ success: true, data: labsWithStatus });
@@ -61,18 +61,18 @@ const getLabById = asyncHandler(async (req, res) => {
 
   if (!lab) {
     res.status(404);
-    throw new Error('Lab not found');
+    throw new Error("Lab not found");
   }
 
   const allowedCourse = await Course.findOne({
     _id: lab.courseId,
-    'sections.students': req.user._id,
+    "sections.students": req.user._id,
     active: true,
   });
 
   if (!allowedCourse) {
     res.status(403);
-    throw new Error('You do not have access to this lab');
+    throw new Error("You do not have access to this lab");
   }
 
   res.json({ success: true, data: lab });
@@ -85,24 +85,24 @@ const submitLabCode = asyncHandler(async (req, res) => {
 
   if (!code || !language) {
     res.status(400);
-    throw new Error('Code and language are required');
+    throw new Error("Code and language are required");
   }
 
   const lab = await Lab.findById(labId);
   if (!lab) {
     res.status(404);
-    throw new Error('Lab not found');
+    throw new Error("Lab not found");
   }
 
   const allowedCourse = await Course.findOne({
     _id: lab.courseId,
-    'sections.students': req.user._id,
+    "sections.students": req.user._id,
     active: true,
   });
 
   if (!allowedCourse) {
     res.status(403);
-    throw new Error('You do not have access to this lab');
+    throw new Error("You do not have access to this lab");
   }
 
   const submission = await Submission.findOneAndUpdate(
@@ -110,10 +110,10 @@ const submitLabCode = asyncHandler(async (req, res) => {
     {
       code,
       language,
-      status: 'submitted',
+      status: "submitted",
       submittedAt: new Date(),
     },
-    { upsert: true, new: true }
+    { upsert: true, new: true },
   );
 
   const testResults = await runTests(submission._id);
@@ -132,16 +132,17 @@ const submitLabCode = asyncHandler(async (req, res) => {
 const getGrades = asyncHandler(async (req, res) => {
   const submissions = await Submission.find({
     studentId: req.user._id,
-    status: 'graded',
+    status: "graded",
   })
-    .populate('labId', 'title points dueDate')
+    .populate("labId", "title points dueDate")
     .sort({ submittedAt: -1 });
 
   const formatted = submissions.map((sub) => ({
     id: sub._id,
     lab: sub.labId?.title || null,
     score: sub.score,
-    testsPassed: (sub.testResults || []).filter((result) => result.passed).length,
+    testsPassed: (sub.testResults || []).filter((result) => result.passed)
+      .length,
     testsTotal: (sub.testResults || []).length,
     grade: sub.rubric,
     feedback: sub.overallFeedback,
@@ -165,7 +166,7 @@ const getVersions = asyncHandler(async (req, res) => {
 
   const versions = await Version.find({ submissionId: submission._id })
     .sort({ versionNumber: -1 })
-    .select('versionNumber code description createdAt');
+    .select("versionNumber code description createdAt");
 
   const formatted = versions.map((version) => ({
     version: version.versionNumber,
@@ -184,7 +185,7 @@ const saveVersion = asyncHandler(async (req, res) => {
 
   if (!code) {
     res.status(400);
-    throw new Error('Code is required');
+    throw new Error("Code is required");
   }
 
   const submission = await Submission.findOne({
@@ -194,14 +195,16 @@ const saveVersion = asyncHandler(async (req, res) => {
 
   if (!submission) {
     res.status(404);
-    throw new Error('No submission found for this lab');
+    throw new Error("No submission found for this lab");
   }
 
-  const lastVersion = await Version.findOne({ submissionId: submission._id }).sort({ versionNumber: -1 });
+  const lastVersion = await Version.findOne({
+    submissionId: submission._id,
+  }).sort({ versionNumber: -1 });
 
   if (lastVersion && lastVersion.code === code) {
     res.status(400);
-    throw new Error('No changes detected since last version');
+    throw new Error("No changes detected since last version");
   }
 
   const nextVersion = lastVersion ? lastVersion.versionNumber + 1 : 1;

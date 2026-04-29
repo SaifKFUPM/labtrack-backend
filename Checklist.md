@@ -9,27 +9,27 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 
 ## Progress
 
-| Group | Done | Total |
-|---|---|---|
-| Auth | 3 / 3 | |
-| Student — Labs | 4 / 4 | ✅ |
-| Student — Submissions | 1 / 2 | |
-| Student — Progress | 0 / 2 | |
-| Student — Versions | 0 / 2 | |
-| Student — Grades | 1 / 1 | ✅ |
-| Student — Courses | 1 / 1 | ✅ |
-| Student — Peer Reviews | 0 / 5 | |
-| Instructor — Labs | 0 / 5 | |
-| Instructor — Submissions | 0 / 3 | |
-| Instructor — Plagiarism | 0 / 3 | |
-| Instructor — Analytics | 0 / 1 | |
-| Admin — Users | 0 / 4 | |
-| Admin — Courses | 0 / 4 | |
-| Admin — Departments | 0 / 3 | |
-| Admin — System | 0 / 8 | |
-| Admin — Security | 0 / 4 | |
-| Admin — Analytics | 0 / 3 | |
-| **Total** | **10 / 58** | |
+| Group                    | Done        | Total |
+| ------------------------ | ----------- | ----- |
+| Auth                     | 3 / 3       |       |
+| Student — Labs           | 4 / 4       | ✅    |
+| Student — Submissions    | 1 / 2       |       |
+| Student — Progress       | 0 / 2       |       |
+| Student — Versions       | 0 / 2       |       |
+| Student — Grades         | 1 / 1       | ✅    |
+| Student — Courses        | 1 / 1       | ✅    |
+| Student — Peer Reviews   | 0 / 5       |       |
+| Instructor — Labs        | 0 / 5       |       |
+| Instructor — Submissions | 0 / 3       |       |
+| Instructor — Plagiarism  | 0 / 3       |       |
+| Instructor — Analytics   | 0 / 1       |       |
+| Admin — Users            | 0 / 4       |       |
+| Admin — Courses          | 0 / 4       |       |
+| Admin — Departments      | 0 / 3       |       |
+| Admin — System           | 0 / 8       |       |
+| Admin — Security         | 0 / 4       |       |
+| Admin — Analytics        | 0 / 3       |       |
+| **Total**                | **10 / 58** |       |
 
 ---
 

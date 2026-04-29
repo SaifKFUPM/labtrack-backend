@@ -1,13 +1,13 @@
-const { compileCode } = require('./compile.service');
-const Submission = require('../models/Submission');
-const Lab = require('../models/Lab');
+const { compileCode } = require("./compile.service");
+const Submission = require("../models/Submission");
+const Lab = require("../models/Lab");
 
 const runTests = async (submissionId) => {
   const submission = await Submission.findById(submissionId);
-  if (!submission) throw new Error('Submission not found');
+  if (!submission) throw new Error("Submission not found");
 
   const lab = await Lab.findById(submission.labId);
-  if (!lab) throw new Error('Lab not found');
+  if (!lab) throw new Error("Lab not found");
 
   const testCases = lab.testCases || [];
   if (testCases.length === 0) {
@@ -24,7 +24,11 @@ const runTests = async (submissionId) => {
 
     let result;
     try {
-      result = await compileCode(submission.code, submission.language, tc.input);
+      result = await compileCode(
+        submission.code,
+        submission.language,
+        tc.input,
+      );
     } catch (err) {
       results.push({
         testCaseId: tc._id,
@@ -35,7 +39,7 @@ const runTests = async (submissionId) => {
         ...(tc.visible && {
           input: tc.input,
           expectedOutput: tc.expectedOutput,
-          actualOutput: 'Compilation error: ' + err.message,
+          actualOutput: "Compilation error: " + err.message,
         }),
       });
       continue;
@@ -64,7 +68,8 @@ const runTests = async (submissionId) => {
     });
   }
 
-  const score = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * lab.points) : 0;
+  const score =
+    totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * lab.points) : 0;
 
   await Submission.findByIdAndUpdate(submissionId, {
     testResults: results,
@@ -72,7 +77,13 @@ const runTests = async (submissionId) => {
     maxScore: lab.points,
   });
 
-  return { passed, total: testCases.length, score, maxScore: lab.points, results };
+  return {
+    passed,
+    total: testCases.length,
+    score,
+    maxScore: lab.points,
+    results,
+  };
 };
 
 module.exports = { runTests };

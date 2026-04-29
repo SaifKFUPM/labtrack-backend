@@ -8,11 +8,11 @@ Built with Node.js + Express + MongoDB.
 
 ## Team
 
-| Name | ID |
-|---|---|
-| Saif Alsadah | 202257480 |
-| Haidar Aldahan | 202256620 |
-| Hassan Al Henedi | 202276380 |
+| Name               | ID        |
+| ------------------ | --------- |
+| Saif Alsadah       | 202257480 |
+| Haidar Aldahan     | 202256620 |
+| Hassan Al Henedi   | 202276380 |
 | Muhannad Almelaifi | 202253960 |
 
 ---
@@ -32,6 +32,7 @@ Built with Node.js + Express + MongoDB.
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js v18+
 - npm
 - MongoDB Atlas account
@@ -124,31 +125,31 @@ labtrack-backend/
 
 ### Auth
 
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| POST | `/api/auth/register` | Public | Register new user |
-| POST | `/api/auth/login` | Public | Login and get JWT token |
-| GET | `/api/auth/me` | Authenticated | Get current user |
+| Method | Endpoint             | Access        | Description             |
+| ------ | -------------------- | ------------- | ----------------------- |
+| POST   | `/api/auth/register` | Public        | Register new user       |
+| POST   | `/api/auth/login`    | Public        | Login and get JWT token |
+| GET    | `/api/auth/me`       | Authenticated | Get current user        |
 
 ### Compile
 
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| POST | `/api/compile` | Authenticated | Run code via JDoodle API |
+| Method | Endpoint       | Access        | Description              |
+| ------ | -------------- | ------------- | ------------------------ |
+| POST   | `/api/compile` | Authenticated | Run code via JDoodle API |
 
 ### Student (wired)
 
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| GET | `/api/student/courses?enrolled=true` | Student | Get enrolled courses |
-| GET | `/api/student/labs?status=active` | Student | Get active labs for enrolled courses |
-| GET | `/api/student/labs/:labId` | Student | Get single lab details |
-| POST | `/api/student/submissions/:labId` | Student | Submit code and run tests |
-| GET | `/api/student/labs/:labId/versions` | Student | Get submission version history |
-| POST | `/api/student/labs/:labId/versions` | Student | Save a new code version |
-| GET | `/api/student/grades` | Student | Get graded submissions |
+| Method | Endpoint                             | Access  | Description                          |
+| ------ | ------------------------------------ | ------- | ------------------------------------ |
+| GET    | `/api/student/courses?enrolled=true` | Student | Get enrolled courses                 |
+| GET    | `/api/student/labs?status=active`    | Student | Get active labs for enrolled courses |
+| GET    | `/api/student/labs/:labId`           | Student | Get single lab details               |
+| POST   | `/api/student/submissions/:labId`    | Student | Submit code and run tests            |
+| GET    | `/api/student/labs/:labId/versions`  | Student | Get submission version history       |
+| POST   | `/api/student/labs/:labId/versions`  | Student | Save a new code version              |
+| GET    | `/api/student/grades`                | Student | Get graded submissions               |
 
-### Instructor, Admin *(in progress — see [Checklist.md](./Checklist.md))*
+### Instructor, Admin _(in progress — see [Checklist.md](./Checklist.md))_
 
 ---
 
@@ -196,11 +197,12 @@ Authorization: Bearer <token>
 Tokens expire after 30 minutes. Re-login to get a fresh token.
 
 ### Roles
-| Role | Access |
-|---|---|
-| `student` | `/api/student/*`, `/api/compile` |
+
+| Role         | Access                              |
+| ------------ | ----------------------------------- |
+| `student`    | `/api/student/*`, `/api/compile`    |
 | `instructor` | `/api/instructor/*`, `/api/compile` |
-| `admin` | `/api/admin/*` |
+| `admin`      | `/api/admin/*`                      |
 
 ---
 
@@ -214,11 +216,11 @@ All user accounts must use a `@kfupm.edu.sa` email address. Registration is reje
 
 Code is executed via the **JDoodle API** in a sandboxed environment. Supported languages:
 
-| Label | JDoodle ID |
-|---|---|
-| `python` | `python3` |
-| `cpp` | `cpp17` |
-| `java` | `java` |
-| `c` | `c` |
+| Label    | JDoodle ID |
+| -------- | ---------- |
+| `python` | `python3`  |
+| `cpp`    | `cpp17`    |
+| `java`   | `java`     |
+| `c`      | `c`        |
 
 Free tier limit: **200 compilations per day**.
