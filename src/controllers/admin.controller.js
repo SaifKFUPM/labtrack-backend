@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Course = require('../models/Course');
+const Department = require('../models/Department');
 const asyncHandler = require('../utils/asyncHandler');
 
 const formatCourse = (c) => ({
@@ -196,6 +197,53 @@ const deleteCourse = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Course deleted' });
 });
 
+// ─── Departments ──────────────────────────────────────────────────────────────
+
+// GET /api/admin/departments
+const getDepartments = asyncHandler(async (req, res) => {
+  const depts = await Department.find().sort({ code: 1 });
+  res.json({ success: true, data: depts });
+});
+
+// POST /api/admin/departments
+const createDepartment = asyncHandler(async (req, res) => {
+  const { code, name, headId, contactEmail, policies } = req.body;
+
+  if (!code || !name) {
+    res.status(400);
+    throw new Error('code and name are required');
+  }
+
+  const exists = await Department.findOne({ code });
+  if (exists) {
+    res.status(409);
+    throw new Error('Department with this code already exists');
+  }
+
+  const dept = await Department.create({ code, name, headId, contactEmail, policies });
+  res.status(201).json({ success: true, data: dept });
+});
+
+// PATCH /api/admin/departments/:deptId
+const updateDepartment = asyncHandler(async (req, res) => {
+  const { code, name, headId, contactEmail, policies } = req.body;
+
+  const dept = await Department.findById(req.params.deptId);
+  if (!dept) {
+    res.status(404);
+    throw new Error('Department not found');
+  }
+
+  if (code !== undefined) dept.code = code;
+  if (name !== undefined) dept.name = name;
+  if (headId !== undefined) dept.headId = headId;
+  if (contactEmail !== undefined) dept.contactEmail = contactEmail;
+  if (policies !== undefined) dept.policies = { ...dept.policies.toObject(), ...policies };
+
+  await dept.save();
+  res.json({ success: true, data: dept });
+});
+
 module.exports = {
   getUsers,
   createUser,
@@ -205,4 +253,7 @@ module.exports = {
   createCourse,
   updateCourse,
   deleteCourse,
+  getDepartments,
+  createDepartment,
+  updateDepartment,
 };

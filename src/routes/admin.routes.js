@@ -11,6 +11,9 @@ const {
   createCourse,
   updateCourse,
   deleteCourse,
+  getDepartments,
+  createDepartment,
+  updateDepartment,
 } = require('../controllers/admin.controller');
 
 router.use(authMiddleware, checkRole('admin'));
@@ -26,5 +29,10 @@ router.get('/courses', getCourses);
 router.post('/courses', createCourse);
 router.patch('/courses/:courseId', updateCourse);
 router.delete('/courses/:courseId', deleteCourse);
+
+// Departments
+router.get('/departments', getDepartments);
+router.post('/departments', createDepartment);
+router.patch('/departments/:deptId', updateDepartment);
 
 module.exports = router;
