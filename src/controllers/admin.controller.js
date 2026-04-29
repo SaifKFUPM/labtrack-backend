@@ -362,6 +362,53 @@ const updateBackupSchedule = asyncHandler(async (req, res) => {
   res.json({ success: true, data: settings.backupSchedule });
 });
 
+// ─── System Settings ──────────────────────────────────────────────────────────
+
+// GET /api/admin/system/settings
+const getSystemSettings = asyncHandler(async (req, res) => {
+  const settings = await SystemSettings.getSingleton();
+  res.json({
+    success: true,
+    data: {
+      execution: settings.execution,
+      languages: settings.languages,
+      api: settings.api,
+      testing: settings.testing,
+      notifications: settings.notifications,
+    },
+  });
+});
+
+// PATCH /api/admin/system/settings
+const updateSystemSettings = asyncHandler(async (req, res) => {
+  const { execution, languages, api, testing, notifications } = req.body;
+  const settings = await SystemSettings.getSingleton();
+
+  if (execution !== undefined) {
+    Object.assign(settings.execution, execution);
+    settings.markModified('execution');
+  }
+  if (languages !== undefined) settings.languages = languages;
+  if (api !== undefined) {
+    Object.assign(settings.api, api);
+    settings.markModified('api');
+  }
+  if (testing !== undefined) settings.testing = { ...settings.testing, ...testing };
+  if (notifications !== undefined) settings.notifications = { ...settings.notifications, ...notifications };
+
+  await settings.save();
+  res.json({
+    success: true,
+    data: {
+      execution: settings.execution,
+      languages: settings.languages,
+      api: settings.api,
+      testing: settings.testing,
+      notifications: settings.notifications,
+    },
+  });
+});
+
 module.exports = {
   getUsers,
   createUser,
@@ -383,4 +430,6 @@ module.exports = {
   triggerBackup,
   getBackupSchedule,
   updateBackupSchedule,
+  getSystemSettings,
+  updateSystemSettings,
 };

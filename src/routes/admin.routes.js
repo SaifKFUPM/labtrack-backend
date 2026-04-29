@@ -23,6 +23,8 @@ const {
   triggerBackup,
   getBackupSchedule,
   updateBackupSchedule,
+  getSystemSettings,
+  updateSystemSettings,
 } = require('../controllers/admin.controller');
 
 router.use(authMiddleware, checkRole('admin'));
@@ -60,5 +62,9 @@ router.post('/system/backups/trigger', triggerBackup);
 // Backup Schedule
 router.get('/system/backup-schedule', getBackupSchedule);
 router.patch('/system/backup-schedule', updateBackupSchedule);
+
+// System Settings
+router.get('/system/settings', getSystemSettings);
+router.patch('/system/settings', updateSystemSettings);
 
 module.exports = router;
