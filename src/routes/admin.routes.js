@@ -29,6 +29,9 @@ const {
   updateSecuritySettings,
   getAuditLogs,
   clearAuditLogs,
+  getAnalytics,
+  createAnalyticsReport,
+  getAnalyticsReports,
 } = require('../controllers/admin.controller');
 
 router.use(authMiddleware, checkRole('admin'));
@@ -78,5 +81,10 @@ router.patch('/security/settings', updateSecuritySettings);
 // Audit Logs
 router.get('/audit-logs', getAuditLogs);
 router.delete('/audit-logs', clearAuditLogs);
+
+// Analytics
+router.get('/analytics', getAnalytics);
+router.post('/analytics/reports', createAnalyticsReport);
+router.get('/analytics/reports', getAnalyticsReports);
 
 module.exports = router;

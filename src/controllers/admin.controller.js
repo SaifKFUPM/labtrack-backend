@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const Course = require('../models/Course');
 const Department = require('../models/Department');
+const Lab = require('../models/Lab');
+const Submission = require('../models/Submission');
 const SystemLog = require('../models/SystemLog');
 const SystemSettings = require('../models/SystemSettings');
 const AuditLog = require('../models/AuditLog');
@@ -454,6 +456,99 @@ const clearAuditLogs = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Audit log cleared' });
 });
 
+// ─── Analytics ────────────────────────────────────────────────────────────────
+
+// GET /api/admin/analytics
+const getAnalytics = asyncHandler(async (req, res) => {
+  const [userCount, courseCount, labCount, deptCount, allSubmissions] = await Promise.all([
+    User.countDocuments(),
+    Course.countDocuments(),
+    Lab.countDocuments(),
+    Department.countDocuments(),
+    Submission.find().populate({ path: 'labId', select: 'courseId' }),
+  ]);
+
+  // department-level submission counts via courseId -> course.department
+  const courses = await Course.find().select('_id department');
+  const courseTodept = Object.fromEntries(courses.map((c) => [c._id.toString(), c.department]));
+
+  const deptSubMap = {};
+  for (const sub of allSubmissions) {
+    const courseId = sub.labId?.courseId?.toString();
+    const dept = courseTodept[courseId];
+    if (dept) deptSubMap[dept] = (deptSubMap[dept] || 0) + 1;
+  }
+  const deptSubs = Object.entries(deptSubMap).map(([dept, count]) => ({ dept, count }));
+
+  // weekly: submissions per day for the last 7 days
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const recentSubs = allSubmissions.filter((s) => s.submittedAt >= sevenDaysAgo);
+  const weeklyMap = {};
+  for (const sub of recentSubs) {
+    const day = sub.submittedAt?.toISOString().slice(0, 10);
+    if (day) weeklyMap[day] = (weeklyMap[day] || 0) + 1;
+  }
+  const weekly = Object.entries(weeklyMap)
+    .map(([date, count]) => ({ date, count }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  // language usage
+  const langMap = {};
+  for (const sub of allSubmissions) {
+    if (sub.language) langMap[sub.language] = (langMap[sub.language] || 0) + 1;
+  }
+  const langs = Object.entries(langMap).map(([lang, count]) => ({ lang, count }));
+
+  res.json({
+    success: true,
+    data: {
+      stats: { users: userCount, courses: courseCount, labs: labCount, depts: deptCount },
+      deptSubs,
+      weekly,
+      langs,
+    },
+  });
+});
+
+// POST /api/admin/analytics/reports
+const createAnalyticsReport = asyncHandler(async (req, res) => {
+  const { name, type, filters } = req.body;
+  if (!name || !type) {
+    res.status(400);
+    throw new Error('name and type are required');
+  }
+
+  const settings = await SystemSettings.getSingleton();
+  settings.analyticsReports.push({ name, type, filters: filters || {}, generatedAt: new Date() });
+  settings.markModified('analyticsReports');
+  await settings.save();
+
+  const saved = settings.analyticsReports[settings.analyticsReports.length - 1];
+  res.status(201).json({
+    success: true,
+    data: {
+      id: saved._id,
+      name: saved.name,
+      type: saved.type,
+      filters: saved.filters,
+      generatedAt: saved.generatedAt,
+    },
+  });
+});
+
+// GET /api/admin/analytics/reports
+const getAnalyticsReports = asyncHandler(async (req, res) => {
+  const settings = await SystemSettings.getSingleton();
+  const data = (settings.analyticsReports || []).map((r) => ({
+    id: r._id,
+    name: r.name,
+    type: r.type,
+    filters: r.filters,
+    generatedAt: r.generatedAt,
+  }));
+  res.json({ success: true, data });
+});
+
 module.exports = {
   getUsers,
   createUser,
@@ -481,4 +576,7 @@ module.exports = {
   updateSecuritySettings,
   getAuditLogs,
   clearAuditLogs,
+  getAnalytics,
+  createAnalyticsReport,
+  getAnalyticsReports,
 };

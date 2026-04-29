@@ -64,6 +64,15 @@ const systemSettingsSchema = new mongoose.Schema(
       requireStrongPassword: { type: Boolean, default: true },
       examMode: { type: Boolean, default: false },
     },
+
+    analyticsReports: [
+      {
+        name: { type: String },
+        type: { type: String },
+        filters: { type: mongoose.Schema.Types.Mixed, default: {} },
+        generatedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );
