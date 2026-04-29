@@ -1,6 +1,7 @@
 const compileRoutes = require("./src/routes/compile.routes");
 const authRoutes = require("./src/routes/auth.routes");
 const studentRoutes = require("./src/routes/student.routes");
+const adminRoutes = require("./src/routes/admin.routes");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -22,6 +23,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/compile", compileRoutes);
 app.use("/api/student", studentRoutes);
+app.use("/api/admin", adminRoutes);
 app.use(errorMiddleware);
 
 module.exports = app;
