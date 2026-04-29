@@ -148,6 +148,9 @@ labtrack-backend/
 | GET    | `/api/student/labs/:labId/versions`  | Student | Get submission version history       |
 | POST   | `/api/student/labs/:labId/versions`  | Student | Save a new code version              |
 | GET    | `/api/student/grades`                | Student | Get graded submissions               |
+| GET    | `/api/student/submissions/:labId`    | Student | Get details for a submission         |
+| GET    | `/api/progress`                      | Student | Get progress map for current student |
+| PATCH  | `/api/progress/:labId`               | Student | Update a progress entry for a lab    |
 
 ### Instructor, Admin _(in progress — see [Checklist.md](./Checklist.md))_
 
