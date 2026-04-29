@@ -19,7 +19,7 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 | Student — Grades         | 1 / 1       | ✅    |
 | Student — Courses        | 1 / 1       | ✅    |
 | Student — Peer Reviews   | 0 / 5       |       |
-| Instructor — Labs        | 0 / 5       |       |
+| Instructor — Labs        | 5 / 5       | ✅    |
 | Instructor — Submissions | 0 / 3       |       |
 | Instructor — Plagiarism  | 0 / 3       |       |
 | Instructor — Analytics   | 0 / 1       |       |
@@ -29,7 +29,7 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 | Admin — System           | 9 / 9       | ✅    |
 | Admin — Security         | 4 / 4       | ✅    |
 | Admin — Analytics        | 3 / 3       | ✅    |
-| **Total**                | **37 / 58** |       |
+| **Total**                | **42 / 58** |       |
 
 ---
 
