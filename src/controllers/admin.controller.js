@@ -3,6 +3,7 @@ const Course = require('../models/Course');
 const Department = require('../models/Department');
 const SystemLog = require('../models/SystemLog');
 const SystemSettings = require('../models/SystemSettings');
+const AuditLog = require('../models/AuditLog');
 const asyncHandler = require('../utils/asyncHandler');
 
 const formatCourse = (c) => ({
@@ -409,6 +410,50 @@ const updateSystemSettings = asyncHandler(async (req, res) => {
   });
 });
 
+// ─── Security Settings ────────────────────────────────────────────────────────
+
+// GET /api/admin/security/settings
+const getSecuritySettings = asyncHandler(async (req, res) => {
+  const settings = await SystemSettings.getSingleton();
+  res.json({ success: true, data: settings.security });
+});
+
+// PATCH /api/admin/security/settings
+const updateSecuritySettings = asyncHandler(async (req, res) => {
+  const settings = await SystemSettings.getSingleton();
+  Object.assign(settings.security, req.body);
+  settings.markModified('security');
+  await settings.save();
+  res.json({ success: true, data: settings.security });
+});
+
+// ─── Audit Logs ───────────────────────────────────────────────────────────────
+
+// GET /api/admin/audit-logs
+const getAuditLogs = asyncHandler(async (req, res) => {
+  const logs = await AuditLog.find()
+    .populate('actor', 'fullName email')
+    .sort({ createdAt: -1 });
+
+  const data = logs.map((l) => ({
+    id: l._id,
+    actor: l.actor,
+    action: l.action,
+    target: l.target,
+    ip: l.ip,
+    ts: l.createdAt,
+    severity: l.severity,
+  }));
+
+  res.json({ success: true, data });
+});
+
+// DELETE /api/admin/audit-logs
+const clearAuditLogs = asyncHandler(async (req, res) => {
+  await AuditLog.deleteMany({});
+  res.json({ success: true, message: 'Audit log cleared' });
+});
+
 module.exports = {
   getUsers,
   createUser,
@@ -432,4 +477,8 @@ module.exports = {
   updateBackupSchedule,
   getSystemSettings,
   updateSystemSettings,
+  getSecuritySettings,
+  updateSecuritySettings,
+  getAuditLogs,
+  clearAuditLogs,
 };

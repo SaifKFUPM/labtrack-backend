@@ -25,6 +25,10 @@ const {
   updateBackupSchedule,
   getSystemSettings,
   updateSystemSettings,
+  getSecuritySettings,
+  updateSecuritySettings,
+  getAuditLogs,
+  clearAuditLogs,
 } = require('../controllers/admin.controller');
 
 router.use(authMiddleware, checkRole('admin'));
@@ -66,5 +70,13 @@ router.patch('/system/backup-schedule', updateBackupSchedule);
 // System Settings
 router.get('/system/settings', getSystemSettings);
 router.patch('/system/settings', updateSystemSettings);
+
+// Security Settings
+router.get('/security/settings', getSecuritySettings);
+router.patch('/security/settings', updateSecuritySettings);
+
+// Audit Logs
+router.get('/audit-logs', getAuditLogs);
+router.delete('/audit-logs', clearAuditLogs);
 
 module.exports = router;
