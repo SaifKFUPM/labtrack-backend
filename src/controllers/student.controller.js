@@ -158,11 +158,14 @@ const getGrades = asyncHandler(async (req, res) => {
 const getSubmissionDetails = asyncHandler(async (req, res) => {
   const { labId } = req.params;
 
-  const submission = await Submission.findOne({ labId, studentId: req.user._id }).populate('labId', 'title points');
+  const submission = await Submission.findOne({
+    labId,
+    studentId: req.user._id,
+  }).populate("labId", "title points");
 
   if (!submission) {
     res.status(404);
-    throw new Error('Submission not found');
+    throw new Error("Submission not found");
   }
 
   res.json({ success: true, data: submission });
@@ -170,7 +173,9 @@ const getSubmissionDetails = asyncHandler(async (req, res) => {
 
 // GET /api/progress
 const getProgress = asyncHandler(async (req, res) => {
-  const progress = await Progress.find({ studentId: req.user._id }).sort({ updatedAt: -1 });
+  const progress = await Progress.find({ studentId: req.user._id }).sort({
+    updatedAt: -1,
+  });
 
   const mapped = progress.reduce((acc, p) => {
     acc[p.labId] = {
@@ -189,15 +194,21 @@ const updateProgress = asyncHandler(async (req, res) => {
   const { labId } = req.params;
   const { status, code, submittedAt } = req.body;
 
-  const allowedStatuses = ['not started','in progress','submitted','graded'];
+  const allowedStatuses = ["not started", "in progress", "submitted", "graded"];
   if (status && !allowedStatuses.includes(status)) {
     res.status(400);
-    throw new Error('Invalid status');
+    throw new Error("Invalid status");
   }
 
   const prog = await Progress.findOneAndUpdate(
     { labId, studentId: req.user._id },
-    { $set: { status: status || undefined, code: code || undefined, submittedAt: submittedAt || undefined } },
+    {
+      $set: {
+        status: status || undefined,
+        code: code || undefined,
+        submittedAt: submittedAt || undefined,
+      },
+    },
     { upsert: true, new: true, setDefaultsOnInsert: true },
   );
 
