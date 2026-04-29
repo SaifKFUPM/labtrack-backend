@@ -11,7 +11,7 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 
 | Group                    | Done        | Total |
 | ------------------------ | ----------- | ----- |
-| Auth                     | 3 / 3       |       |
+| Auth                     | 3 / 3       | ✅    |
 | Student — Labs           | 4 / 4       | ✅    |
 | Student — Submissions    | 2 / 2       | ✅    |
 | Student — Progress       | 2 / 2       | ✅    |
@@ -55,15 +55,12 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 ## STUDENT — Submissions
 
 - [x] 🔴 `POST /api/student/submissions/:labId` — body: `{ code, language }` — runs tests, returns `{ id, status, testResults }`
-- [ ] 🔴 `GET /api/student/submissions/:labId` — get submission details
 - [x] 🔴 `GET /api/student/submissions/:labId` — get submission details
 
 ---
 
 ## STUDENT — Progress
 
-- [ ] 🔴 `GET /api/progress` — returns `{ [labId]: { status, submittedAt, score } }`
-- [ ] 🔴 `PATCH /api/progress/:labId` — body: `{ status, code, submittedAt }` — updates progress entry
 - [x] 🔴 `GET /api/progress` — returns `{ [labId]: { status, submittedAt, score } }`
 - [x] 🔴 `PATCH /api/progress/:labId` — body: `{ status, code, submittedAt }` — updates progress entry
 
@@ -83,43 +80,43 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 
 ## STUDENT — Peer Reviews
 
-- [ ] 🟡 `GET /api/peer-reviews` — returns `[{ id, labId, labTitle, status, dueDate, sharedAt, files, fileContents, review }]`
-- [ ] 🟡 `GET /api/peer-reviews/:reviewId` — returns single review + `testsPassed`
-- [ ] 🟡 `POST /api/peer-reviews/:reviewId/submit` — body: `{ readability, efficiency, comments, strengths, improvements, overallComment, lineComments, submittedAt }`
-- [ ] 🟡 `GET /api/peer-reviews/received/:labId` — returns review with `lineComments` for the current student
-- [ ] 🟡 `POST /api/peer-reviews/share` — body: `{ labId, reviewerEmail, fileContents, files }` — returns `{ id, shareLink }`
+- [x] 🟡 `GET /api/peer-reviews` — returns `[{ id, labId, labTitle, status, dueDate, sharedAt, files, fileContents, review }]`
+- [x] 🟡 `GET /api/peer-reviews/:reviewId` — returns single review + `testsPassed`
+- [x] 🟡 `POST /api/peer-reviews/:reviewId/submit` — body: `{ readability, efficiency, comments, strengths, improvements, overallComment, lineComments, submittedAt }`
+- [x] 🟡 `GET /api/peer-reviews/received/:labId` — returns review with `lineComments` for the current student
+- [x] 🟡 `POST /api/peer-reviews/share` — body: `{ labId, reviewerEmail, fileContents, files }` — returns `{ id, shareLink }`
 
 ---
 
 ## INSTRUCTOR — Lab Management
 
-- [ ] 🔴 `GET /api/instructor/labs` — returns all labs created by this instructor
-- [ ] 🔴 `POST /api/instructor/labs` — body: `{ title, labNumber, instructions, dueDate, points, difficulty, languages, testCases[], solutions[] }` — creates lab
-- [ ] 🔴 `PATCH /api/instructor/labs/:labId` — body: any subset of above — updates lab
-- [ ] 🔴 `DELETE /api/instructor/labs/:labId` — deletes lab
-- [ ] 🔴 `PATCH /api/instructor/labs/:labId/publish` — body: `{ status: "active" }` — publishes lab, emails students
+- [x] 🔴 `GET /api/instructor/labs` — returns all labs created by this instructor
+- [x] 🔴 `POST /api/instructor/labs` — body: `{ title, labNumber, instructions, dueDate, points, difficulty, languages, testCases[], solutions[] }` — creates lab
+- [x] 🔴 `PATCH /api/instructor/labs/:labId` — body: any subset of above — updates lab
+- [x] 🔴 `DELETE /api/instructor/labs/:labId` — deletes lab
+- [x] 🔴 `PATCH /api/instructor/labs/:labId/publish` — body: `{ status: "active" }` — publishes lab, emails students
 
 ---
 
 ## INSTRUCTOR — Submissions & Grading
 
-- [ ] 🔴 `GET /api/instructor/labs/:labId/submissions` — returns `[{ id, studentId, studentName, studentEmail, status, submittedAt, code, score, maxScore, late, testResults[], rubric, overallFeedback }]`
-- [ ] 🔴 `PATCH /api/instructor/submissions/:subId/grade` — body: `{ score, rubric: { comments, style, efficiency }, inlineComments, overallFeedback, status: "graded" }` — saves grade, emails student
-- [ ] 🟡 `POST /api/instructor/submissions/bulk-grade` — body: `{ updates: [{ subId, score, feedback }] }` — bulk grades array of submissions
+- [x] 🔴 `GET /api/instructor/labs/:labId/submissions` — returns `[{ id, studentId, studentName, studentEmail, status, submittedAt, code, score, maxScore, late, testResults[], rubric, overallFeedback }]`
+- [x] 🔴 `PATCH /api/instructor/submissions/:subId/grade` — body: `{ score, rubric: { comments, style, efficiency }, inlineComments, overallFeedback, status: "graded" }` — saves grade, emails student
+- [x] 🟡 `POST /api/instructor/submissions/bulk-grade` — body: `{ updates: [{ subId, score, feedback }] }` — bulk grades array of submissions
 
 ---
 
 ## INSTRUCTOR — Plagiarism
 
-- [ ] 🟡 `POST /api/instructor/labs/:labId/check-plagiarism` — triggers check — returns `{ pairs: [{ studentAId, studentBId, similarity, flagged }] }`
-- [ ] 🟡 `GET /api/instructor/labs/:labId/plagiarism` — returns saved pairs
-- [ ] 🟡 `PATCH /api/instructor/labs/:labId/plagiarism/:pairKey` — body: `{ flagged }` — updates flag status
+- [x] 🟡 `POST /api/instructor/labs/:labId/check-plagiarism` — triggers check — returns `{ pairs: [{ studentAId, studentBId, similarity, flagged }] }`
+- [x] 🟡 `GET /api/instructor/labs/:labId/plagiarism` — returns saved pairs
+- [x] 🟡 `PATCH /api/instructor/labs/:labId/plagiarism/:pairKey` — body: `{ flagged }` — updates flag status
 
 ---
 
 ## INSTRUCTOR — Analytics
 
-- [ ] 🟡 `GET /api/instructor/labs/:labId/analytics` — returns `{ stats, distribution, timeline, topSubmitters }`
+- [x] 🟡 `GET /api/instructor/labs/:labId/analytics` — returns `{ stats, distribution, timeline, topSubmitters }`
 
 ---
 
@@ -189,12 +186,13 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 
 ## New Models Needed
 
-- [ ] `src/models/Progress.js` — studentId, labId, status, code, submittedAt, score
-- [ ] `src/models/PeerReview.js` — labId, reviewerId, authorId, status, fileContents, files, readability, efficiency, comments, strengths, improvements, overallComment, lineComments, submittedAt, shareLink, dueDate
+
 - [x] `src/models/Department.js` — code, name, headId, contactEmail, policies{}
 - [x] `src/models/SystemLog.js` — level, service, message, resolved
 - [x] `src/models/AuditLog.js` — actor, action, target, ip, severity
 - [x] `src/models/SystemSettings.js` — execution{}, languages[], api{}, testing{}, notifications{}
+- [x] `src/models/Progress.js` — studentId, labId, status, code, submittedAt, score
+- [x] `src/models/PeerReview.js` — labId, reviewerId, authorId, status, fileContents, files, readability, efficiency, comments, strengths, improvements, overallComment, lineComments, submittedAt, shareLink, dueDate
 
 ---
 
