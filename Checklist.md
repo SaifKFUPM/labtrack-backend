@@ -23,13 +23,13 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 | Instructor — Submissions | 0 / 3       |       |
 | Instructor — Plagiarism  | 0 / 3       |       |
 | Instructor — Analytics   | 0 / 1       |       |
-| Admin — Users            | 0 / 4       |       |
-| Admin — Courses          | 0 / 4       |       |
-| Admin — Departments      | 0 / 3       |       |
-| Admin — System           | 0 / 8       |       |
-| Admin — Security         | 0 / 4       |       |
-| Admin — Analytics        | 0 / 3       |       |
-| **Total**                | **10 / 58** |       |
+| Admin — Users            | 4 / 4       | ✅    |
+| Admin — Courses          | 4 / 4       | ✅    |
+| Admin — Departments      | 3 / 3       | ✅    |
+| Admin — System           | 9 / 9       | ✅    |
+| Admin — Security         | 4 / 4       | ✅    |
+| Admin — Analytics        | 3 / 3       | ✅    |
+| **Total**                | **37 / 58** |       |
 
 ---
 
@@ -122,65 +122,65 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 
 ## ADMIN — User Management
 
-- [ ] 🔴 `GET /api/admin/users` — returns `[{ id, fullName, email, role, department, studentId, status, lastLogin, createdAt }]`
-- [ ] 🔴 `POST /api/admin/users` — body: `{ fullName, email, password, role, department, studentId }` — creates user, emails welcome
-- [ ] 🔴 `PATCH /api/admin/users/:userId` — body: `{ role, department, status }` — updates user
-- [ ] 🔴 `DELETE /api/admin/users/:userId` — soft delete (set status: inactive)
+- [x] 🔴 `GET /api/admin/users` — returns `[{ id, fullName, email, role, department, studentId, status, lastLogin, createdAt }]`
+- [x] 🔴 `POST /api/admin/users` — body: `{ fullName, email, password, role, department, studentId }` — creates user, emails welcome
+- [x] 🔴 `PATCH /api/admin/users/:userId` — body: `{ role, department, status }` — updates user
+- [x] 🔴 `DELETE /api/admin/users/:userId` — soft delete (set status: inactive)
 
 ---
 
 ## ADMIN — Course Management
 
-- [ ] 🔴 `GET /api/admin/courses` — returns `[{ id, courseCode, name, department, creditHours, semester, sections[{ sectionNumber, enrolledStudentIds, instructorId, meetingDays }] }]`
-- [ ] 🔴 `POST /api/admin/courses` — body: `{ courseCode, name, department, creditHours, semester, sections[] }` — creates course
-- [ ] 🔴 `PATCH /api/admin/courses/:courseId` — body: any subset — updates course
-- [ ] 🔴 `DELETE /api/admin/courses/:courseId` — deletes course
+- [x] 🔴 `GET /api/admin/courses` — returns `[{ id, courseCode, name, department, creditHours, semester, sections[{ sectionNumber, enrolledStudentIds, instructorId, meetingDays }] }]`
+- [x] 🔴 `POST /api/admin/courses` — body: `{ courseCode, name, department, creditHours, semester, sections[] }` — creates course
+- [x] 🔴 `PATCH /api/admin/courses/:courseId` — body: any subset — updates course
+- [x] 🔴 `DELETE /api/admin/courses/:courseId` — deletes course
 
 ---
 
 ## ADMIN — Departments
 
-- [ ] 🟡 `GET /api/admin/departments` — returns `[{ id, code, name, headId, contactEmail, policies{ latePenaltyPercent, defaultDeadlineTime, requireCodeComments, allowPeerCollaboration, maxGroupSize, plagiarismThreshold } }]`
-- [ ] 🟡 `POST /api/admin/departments` — body: `{ code, name, headId, contactEmail, policies }` — creates dept
-- [ ] 🟡 `PATCH /api/admin/departments/:deptId` — body: `{ policies }` — updates dept settings
+- [x] 🟡 `GET /api/admin/departments` — returns `[{ id, code, name, headId, contactEmail, policies{ latePenaltyPercent, defaultDeadlineTime, requireCodeComments, allowPeerCollaboration, maxGroupSize, plagiarismThreshold } }]`
+- [x] 🟡 `POST /api/admin/departments` — body: `{ code, name, headId, contactEmail, policies }` — creates dept
+- [x] 🟡 `PATCH /api/admin/departments/:deptId` — body: `{ policies }` — updates dept settings
 
 ---
 
 ## ADMIN — System Monitor & Maintenance
 
-- [ ] 🟡 `GET /api/admin/system/logs` — returns `[{ id, level, service, message, timestamp, resolved }]`
-- [ ] 🟡 `PATCH /api/admin/system/logs/:logId` — body: `{ resolved }` — marks log resolved
-- [ ] 🟡 `DELETE /api/admin/system/logs` — clears all logs
-- [ ] 🟡 `GET /api/admin/system/maintenance` — returns `{ active, message, scheduledStart, scheduledEnd, allowAdminAccess, history[] }`
-- [ ] 🟡 `PATCH /api/admin/system/maintenance` — body: `{ active, message, scheduledStart, scheduledEnd, allowAdminAccess }`
-- [ ] 🟡 `GET /api/admin/system/backups` — returns `[{ id, name, type, scope, size, status, ts, retention }]`
-- [ ] 🟡 `POST /api/admin/system/backups/trigger` — body: `{ scope }` — returns `{ backupId, status }`
-- [ ] 🟡 `GET /api/admin/system/backup-schedule` — returns schedule config
-- [ ] 🟡 `PATCH /api/admin/system/backup-schedule` — updates schedule config
+- [x] 🟡 `GET /api/admin/system/logs` — returns `[{ id, level, service, message, timestamp, resolved }]`
+- [x] 🟡 `PATCH /api/admin/system/logs/:logId` — body: `{ resolved }` — marks log resolved
+- [x] 🟡 `DELETE /api/admin/system/logs` — clears all logs
+- [x] 🟡 `GET /api/admin/system/maintenance` — returns `{ active, message, scheduledStart, scheduledEnd, allowAdminAccess, history[] }`
+- [x] 🟡 `PATCH /api/admin/system/maintenance` — body: `{ active, message, scheduledStart, scheduledEnd, allowAdminAccess }`
+- [x] 🟡 `GET /api/admin/system/backups` — returns `[{ id, name, type, scope, size, status, ts, retention }]`
+- [x] 🟡 `POST /api/admin/system/backups/trigger` — body: `{ scope }` — returns `{ backupId, status }`
+- [x] 🟡 `GET /api/admin/system/backup-schedule` — returns schedule config
+- [x] 🟡 `PATCH /api/admin/system/backup-schedule` — updates schedule config
 
 ---
 
 ## ADMIN — System Settings
 
-- [ ] 🟡 `GET /api/admin/system/settings` — returns `{ execution{ compilationTimeoutSec, executionTimeoutSec, memoryLimitMB }, languages[], api{ judgeApiUrl, judgeApiKey }, testing{}, notifications{} }`
-- [ ] 🟡 `PATCH /api/admin/system/settings` — body: any subset — updates settings
+- [x] 🟡 `GET /api/admin/system/settings` — returns `{ execution{ compilationTimeoutSec, executionTimeoutSec, memoryLimitMB }, languages[], api{ judgeApiUrl, judgeApiKey }, testing{}, notifications{} }`
+- [x] 🟡 `PATCH /api/admin/system/settings` — body: any subset — updates settings
 
 ---
 
 ## ADMIN — Security & Access Control
 
-- [ ] 🟡 `GET /api/admin/security/settings` — returns `{ twoFactorRequired, sessionTimeoutMin, maxLoginAttempts, lockoutDurationMin, passwordExpiryDays, requireStrongPassword, examMode }`
-- [ ] 🟡 `PATCH /api/admin/security/settings` — body: any subset — updates security config
-- [ ] 🟡 `GET /api/admin/audit-logs` — returns `[{ id, actor, action, target, ip, ts, severity }]`
-- [ ] 🟡 `DELETE /api/admin/audit-logs` — clears audit log
+- [x] 🟡 `GET /api/admin/security/settings` — returns `{ twoFactorRequired, sessionTimeoutMin, maxLoginAttempts, lockoutDurationMin, passwordExpiryDays, requireStrongPassword, examMode }`
+- [x] 🟡 `PATCH /api/admin/security/settings` — body: any subset — updates security config
+- [x] 🟡 `GET /api/admin/audit-logs` — returns `[{ id, actor, action, target, ip, ts, severity }]`
+- [x] 🟡 `DELETE /api/admin/audit-logs` — clears audit log
 
 ---
 
 ## ADMIN — Analytics
 
-- [ ] 🟡 `GET /api/admin/analytics` — returns `{ stats{ users, courses, labs, depts }, deptSubs[], weekly[], langs[] }`
-- [ ] 🟡 `POST /api/admin/analytics/reports` — body: `{ name, type, filters }` — saves report
-- [ ] 🟡 `GET /api/admin/analytics/reports` — returns `[{ id, name, type, filters, generatedAt }]`
+- [x] 🟡 `GET /api/admin/analytics` — returns `{ stats{ users, courses, labs, depts }, deptSubs[], weekly[], langs[] }`
+- [x] 🟡 `POST /api/admin/analytics/reports` — body: `{ name, type, filters }` — saves report
+- [x] 🟡 `GET /api/admin/analytics/reports` — returns `[{ id, name, type, filters, generatedAt }]`
 
 ---
 
@@ -188,10 +188,10 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 
 - [ ] `src/models/Progress.js` — studentId, labId, status, code, submittedAt, score
 - [ ] `src/models/PeerReview.js` — labId, reviewerId, authorId, status, fileContents, files, readability, efficiency, comments, strengths, improvements, overallComment, lineComments, submittedAt, shareLink, dueDate
-- [ ] `src/models/Department.js` — code, name, headId, contactEmail, policies{}
-- [ ] `src/models/SystemLog.js` — level, service, message, resolved
-- [ ] `src/models/AuditLog.js` — actor, action, target, ip, severity
-- [ ] `src/models/SystemSettings.js` — execution{}, languages[], api{}, testing{}, notifications{}
+- [x] `src/models/Department.js` — code, name, headId, contactEmail, policies{}
+- [x] `src/models/SystemLog.js` — level, service, message, resolved
+- [x] `src/models/AuditLog.js` — actor, action, target, ip, severity
+- [x] `src/models/SystemSettings.js` — execution{}, languages[], api{}, testing{}, notifications{}
 
 ---
 
