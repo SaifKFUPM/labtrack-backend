@@ -177,6 +177,52 @@ labtrack-backend/
 
 ---
 
+## Development & Branching
+
+- This repository uses `development` for integration and `main` for releases. Create feature branches from `development` (or `main` if you prefer), work on `feat/...`, then open PRs targeting `development` for review.
+- Example workflow:
+
+```bash
+# update main then branch
+git checkout main
+git pull origin main
+git checkout -b feat/your-feature
+```
+
+Push your branch and open a PR targeting `development`.
+
+- Protect `main` with branch protection rules (require PR reviews and CI) to prevent accidental direct merges.
+
+## Smoke Tests
+
+Quick authenticated smoke test (PowerShell):
+
+```powershell
+# Register
+$reg = Invoke-RestMethod -Uri 'http://localhost:5000/api/auth/register' -Method Post -Body (@{ fullName='Test User'; email='test+user@kfupm.edu.sa'; password='Pass123!'; role='student' } | ConvertTo-Json) -ContentType 'application/json'
+
+# Login
+$login = Invoke-RestMethod -Uri 'http://localhost:5000/api/auth/login' -Method Post -Body (@{ email='test+user@kfupm.edu.sa'; password='Pass123!' } | ConvertTo-Json) -ContentType 'application/json'
+$token = $login.token
+
+# Call protected endpoint
+Invoke-RestMethod -Uri 'http://localhost:5000/api/student/labs?status=active' -Method Get -Headers @{ Authorization = "Bearer $token" }
+```
+
+Health check (curl):
+
+```bash
+curl -s http://localhost:5000/api/health
+```
+
+## MongoDB SRV note
+
+If your environment cannot resolve `mongodb+srv://` URIs (DNS SRV issues), use a non-SRV host-list connection string from Atlas. Example:
+
+```
+MONGO_URI=mongodb://host1:27017,host2:27017,host3:27017/labtrack_db?ssl=true&replicaSet=atlas-xxxxxx&authSource=admin&retryWrites=true&w=majority
+```
+
 ## Implementation Progress
 
 ### ✅ Complete
