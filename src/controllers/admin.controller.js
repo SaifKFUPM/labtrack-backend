@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const Course = require('../models/Course');
 const Department = require('../models/Department');
+const SystemLog = require('../models/SystemLog');
+const SystemSettings = require('../models/SystemSettings');
 const asyncHandler = require('../utils/asyncHandler');
 
 const formatCourse = (c) => ({
@@ -244,6 +246,122 @@ const updateDepartment = asyncHandler(async (req, res) => {
   res.json({ success: true, data: dept });
 });
 
+// ─── System Logs ─────────────────────────────────────────────────────────────
+
+// GET /api/admin/system/logs
+const getSystemLogs = asyncHandler(async (req, res) => {
+  const logs = await SystemLog.find().sort({ createdAt: -1 });
+  const data = logs.map((l) => ({
+    id: l._id,
+    level: l.level,
+    service: l.service,
+    message: l.message,
+    timestamp: l.createdAt,
+    resolved: l.resolved,
+  }));
+  res.json({ success: true, data });
+});
+
+// PATCH /api/admin/system/logs/:logId
+const resolveSystemLog = asyncHandler(async (req, res) => {
+  const { resolved } = req.body;
+  const log = await SystemLog.findById(req.params.logId);
+  if (!log) {
+    res.status(404);
+    throw new Error('Log not found');
+  }
+  log.resolved = resolved ?? true;
+  await log.save();
+  res.json({ success: true, data: { id: log._id, resolved: log.resolved } });
+});
+
+// DELETE /api/admin/system/logs
+const clearSystemLogs = asyncHandler(async (req, res) => {
+  await SystemLog.deleteMany({});
+  res.json({ success: true, message: 'All logs cleared' });
+});
+
+// ─── Maintenance ──────────────────────────────────────────────────────────────
+
+// GET /api/admin/system/maintenance
+const getMaintenance = asyncHandler(async (req, res) => {
+  const settings = await SystemSettings.getSingleton();
+  res.json({ success: true, data: settings.maintenance });
+});
+
+// PATCH /api/admin/system/maintenance
+const updateMaintenance = asyncHandler(async (req, res) => {
+  const { active, message, scheduledStart, scheduledEnd, allowAdminAccess } = req.body;
+  const settings = await SystemSettings.getSingleton();
+
+  if (active !== undefined) settings.maintenance.active = active;
+  if (message !== undefined) settings.maintenance.message = message;
+  if (scheduledStart !== undefined) settings.maintenance.scheduledStart = scheduledStart;
+  if (scheduledEnd !== undefined) settings.maintenance.scheduledEnd = scheduledEnd;
+  if (allowAdminAccess !== undefined) settings.maintenance.allowAdminAccess = allowAdminAccess;
+
+  settings.markModified('maintenance');
+  await settings.save();
+  res.json({ success: true, data: settings.maintenance });
+});
+
+// ─── Backups ──────────────────────────────────────────────────────────────────
+
+// GET /api/admin/system/backups
+const getBackups = asyncHandler(async (req, res) => {
+  const settings = await SystemSettings.getSingleton();
+  const data = (settings.backups || []).map((b) => ({
+    id: b._id,
+    name: b.name,
+    type: b.type,
+    scope: b.scope,
+    size: b.size,
+    status: b.status,
+    ts: b.createdAt,
+    retention: b.retention,
+  }));
+  res.json({ success: true, data });
+});
+
+// POST /api/admin/system/backups/trigger
+const triggerBackup = asyncHandler(async (req, res) => {
+  const { scope } = req.body;
+  const settings = await SystemSettings.getSingleton();
+
+  const backup = {
+    name: `backup-${Date.now()}`,
+    type: 'manual',
+    scope: scope || 'full',
+    size: '0 MB',
+    status: 'completed',
+    retention: settings.backupSchedule.retentionDays,
+  };
+
+  settings.backups.push(backup);
+  settings.markModified('backups');
+  await settings.save();
+
+  const saved = settings.backups[settings.backups.length - 1];
+  res.status(201).json({ success: true, data: { backupId: saved._id, status: saved.status } });
+});
+
+// ─── Backup Schedule ──────────────────────────────────────────────────────────
+
+// GET /api/admin/system/backup-schedule
+const getBackupSchedule = asyncHandler(async (req, res) => {
+  const settings = await SystemSettings.getSingleton();
+  res.json({ success: true, data: settings.backupSchedule });
+});
+
+// PATCH /api/admin/system/backup-schedule
+const updateBackupSchedule = asyncHandler(async (req, res) => {
+  const settings = await SystemSettings.getSingleton();
+  Object.assign(settings.backupSchedule, req.body);
+  settings.markModified('backupSchedule');
+  await settings.save();
+  res.json({ success: true, data: settings.backupSchedule });
+});
+
 module.exports = {
   getUsers,
   createUser,
@@ -256,4 +374,13 @@ module.exports = {
   getDepartments,
   createDepartment,
   updateDepartment,
+  getSystemLogs,
+  resolveSystemLog,
+  clearSystemLogs,
+  getMaintenance,
+  updateMaintenance,
+  getBackups,
+  triggerBackup,
+  getBackupSchedule,
+  updateBackupSchedule,
 };
