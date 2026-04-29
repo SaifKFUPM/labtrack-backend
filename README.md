@@ -97,14 +97,14 @@ labtrack-backend/
 │   │   ├── auth.routes.js
 │   │   ├── compile.routes.js
 │   │   ├── student.routes.js      # ✅ wired in app.js
-│   │   ├── instructor.routes.js   # 🔲 in progress
-│   │   └── admin.routes.js        # 🔲 in progress
+│   │   ├── instructor.routes.js   # ✅ implemented
+│   │   └── admin.routes.js        # ✅ implemented
 │   ├── controllers/
 │   │   ├── auth.controller.js
 │   │   ├── compile.controller.js
 │   │   ├── student.controller.js  # ✅ core student endpoints implemented
-│   │   ├── instructor.controller.js  # 🔲 in progress
-│   │   └── admin.controller.js       # 🔲 in progress
+│   │   ├── instructor.controller.js  # ✅ implemented
+│   │   └── admin.controller.js       # ✅ implemented
 │   ├── services/
 │   │   ├── compile.service.js     # JDoodle API wrapper
 │   │   ├── testRunner.service.js  # ✅ executes embedded lab testCases
@@ -189,13 +189,13 @@ labtrack-backend/
 - [x] Mongoose models — User, Course, Lab (embeds testCases + solutions), Submission (embeds testResults + rubric), Version
 - [x] JDoodle compile service — run code in sandbox
 - [x] `POST /api/compile` — working with Python, C++, Java, C
+- [x] Wire student routes into app.js (courses, labs, submit, grades, versions)
+- [x] Test runner service — run test cases, compare output, calculate score
+- [x] Instructor routes — create lab, grading, analytics
+- [x] Admin routes — user management, course setup, enrollment
 
 ### 🔲 In Progress / Not Started
 
-- [x] Wire student routes into app.js (courses, labs, submit, grades, versions)
-- [x] Test runner service — run test cases, compare output, calculate score
-- [ ] Instructor routes — create lab, grading, analytics
-- [ ] Admin routes — user management, course setup, enrollment
 - [ ] Email service — Nodemailer notifications
 - [ ] Email triggers — new lab, graded submission, welcome email
 - [ ] Deploy to Railway
