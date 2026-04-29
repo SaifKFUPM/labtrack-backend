@@ -13,23 +13,23 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 | ------------------------ | ----------- | ----- |
 | Auth                     | 3 / 3       |       |
 | Student — Labs           | 4 / 4       | ✅    |
-| Student — Submissions    | 1 / 2       |       |
-| Student — Progress       | 0 / 2       |       |
-| Student — Versions       | 0 / 2       |       |
+| Student — Submissions    | 2 / 2       | ✅    |
+| Student — Progress       | 2 / 2       | ✅    |
+| Student — Versions       | 2 / 2       | ✅    |
 | Student — Grades         | 1 / 1       | ✅    |
 | Student — Courses        | 1 / 1       | ✅    |
-| Student — Peer Reviews   | 0 / 5       |       |
-| Instructor — Labs        | 0 / 5       |       |
-| Instructor — Submissions | 0 / 3       |       |
-| Instructor — Plagiarism  | 0 / 3       |       |
-| Instructor — Analytics   | 0 / 1       |       |
+| Student — Peer Reviews   | 5 / 5       | ✅    |
+| Instructor — Labs        | 5 / 5       | ✅    |
+| Instructor — Submissions | 3 / 3       | ✅    |
+| Instructor — Plagiarism  | 3 / 3       | ✅    |
+| Instructor — Analytics   | 1 / 1       | ✅    |
 | Admin — Users            | 4 / 4       | ✅    |
 | Admin — Courses          | 4 / 4       | ✅    |
 | Admin — Departments      | 3 / 3       | ✅    |
 | Admin — System           | 9 / 9       | ✅    |
 | Admin — Security         | 4 / 4       | ✅    |
 | Admin — Analytics        | 3 / 3       | ✅    |
-| **Total**                | **37 / 58** |       |
+| **Total**                | **58 / 58** |       |
 
 ---
 
@@ -56,6 +56,7 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 
 - [x] 🔴 `POST /api/student/submissions/:labId` — body: `{ code, language }` — runs tests, returns `{ id, status, testResults }`
 - [ ] 🔴 `GET /api/student/submissions/:labId` — get submission details
+- [x] 🔴 `GET /api/student/submissions/:labId` — get submission details
 
 ---
 
@@ -63,6 +64,8 @@ Check off as you go. Priority: 🔴 must-have · 🟡 important · 🟢 nice-to-
 
 - [ ] 🔴 `GET /api/progress` — returns `{ [labId]: { status, submittedAt, score } }`
 - [ ] 🔴 `PATCH /api/progress/:labId` — body: `{ status, code, submittedAt }` — updates progress entry
+- [x] 🔴 `GET /api/progress` — returns `{ [labId]: { status, submittedAt, score } }`
+- [x] 🔴 `PATCH /api/progress/:labId` — body: `{ status, code, submittedAt }` — updates progress entry
 
 ---
 

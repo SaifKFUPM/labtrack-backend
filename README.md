@@ -148,6 +148,23 @@ labtrack-backend/
 | GET    | `/api/student/labs/:labId/versions`  | Student | Get submission version history       |
 | POST   | `/api/student/labs/:labId/versions`  | Student | Save a new code version              |
 | GET    | `/api/student/grades`                | Student | Get graded submissions               |
+| GET    | `/api/student/submissions/:labId`    | Student | Get details for a submission         |
+| GET    | `/api/progress`                      | Student | Get progress map for current student |
+| PATCH  | `/api/progress/:labId`               | Student | Update a progress entry for a lab    |
+
+### Instructor (in progress)
+
+| Method | Endpoint                              | Access     | Description                        |
+| ------ | ------------------------------------- | ---------- | ---------------------------------- |
+| GET    | `/api/instructor/labs`                | Instructor | List labs created by instructor    |
+| POST   | `/api/instructor/labs`                | Instructor | Create a new lab                   |
+| PATCH  | `/api/instructor/labs/:labId`         | Instructor | Update lab details                 |
+| DELETE | `/api/instructor/labs/:labId`         | Instructor | Delete a lab                       |
+| PATCH  | `/api/instructor/labs/:labId/publish` | Instructor | Publish a lab (set status: active) |
+
+| GET | `/api/student/submissions/:labId` | Student | Get details for a submission |
+| GET | `/api/progress` | Student | Get progress map for current student |
+| PATCH | `/api/progress/:labId` | Student | Update a progress entry for a lab |
 
 ### Instructor, Admin _(in progress — see [Checklist.md](./Checklist.md))_
 
