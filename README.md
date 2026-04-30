@@ -152,21 +152,26 @@ labtrack-backend/
 | GET    | `/api/progress`                      | Student | Get progress map for current student |
 | PATCH  | `/api/progress/:labId`               | Student | Update a progress entry for a lab    |
 
-### Instructor (in progress)
+### Instructor
 
-| Method | Endpoint                              | Access     | Description                        |
-| ------ | ------------------------------------- | ---------- | ---------------------------------- |
-| GET    | `/api/instructor/labs`                | Instructor | List labs created by instructor    |
-| POST   | `/api/instructor/labs`                | Instructor | Create a new lab                   |
-| PATCH  | `/api/instructor/labs/:labId`         | Instructor | Update lab details                 |
-| DELETE | `/api/instructor/labs/:labId`         | Instructor | Delete a lab                       |
-| PATCH  | `/api/instructor/labs/:labId/publish` | Instructor | Publish a lab (set status: active) |
+| Method | Endpoint                                   | Access     | Description                    |
+| ------ | ------------------------------------------ | ---------- | ------------------------------ |
+| GET    | `/api/instructor/labs`                     | Instructor | List labs made by instructor   |
+| POST   | `/api/instructor/labs`                     | Instructor | Create a new lab               |
+| PATCH  | `/api/instructor/labs/:labId`              | Instructor | Update lab details             |
+| DELETE | `/api/instructor/labs/:labId`              | Instructor | Delete a lab                   |
+| PATCH  | `/api/instructor/labs/:labId/publish`      | Instructor | Publish a lab (status: active) |
+| GET    | `/api/instructor/labs/:labId/submissions`  | Instructor | List lab submissions           |
+| PATCH  | `/api/instructor/submissions/:subId/grade` | Instructor | Grade a submission             |
+| POST   | `/api/instructor/submissions/bulk-grade`   | Instructor | Bulk grade submissions         |
 
-| GET | `/api/student/submissions/:labId` | Student | Get details for a submission |
-| GET | `/api/progress` | Student | Get progress map for current student |
-| PATCH | `/api/progress/:labId` | Student | Update a progress entry for a lab |
+### Admin
 
-### Instructor, Admin _(in progress — see [Checklist.md](./Checklist.md))_
+All admin endpoints listed in [Checklist.md](./Checklist.md) are implemented and included in the backend routes.
+
+### Peer Reviews
+
+All peer-review endpoints listed in [Checklist.md](./Checklist.md) are implemented and included in the backend routes.
 
 ---
 
@@ -191,8 +196,10 @@ labtrack-backend/
 - [x] `POST /api/compile` — working with Python, C++, Java, C
 - [x] Wire student routes into app.js (courses, labs, submit, grades, versions)
 - [x] Test runner service — run test cases, compare output, calculate score
-- [x] Instructor routes — create lab, grading, analytics
-- [x] Admin routes — user management, course setup, enrollment
+- [x] Instructor routes — lab management, submissions, plagiarism, analytics
+- [x] Admin routes — users, courses, departments, system, security, analytics
+- [x] Peer review routes — list, share, submit, receive, and update reviews
+- [x] Checklist coverage — 58 / 58 endpoints completed
 
 ### 🔲 In Progress / Not Started
 

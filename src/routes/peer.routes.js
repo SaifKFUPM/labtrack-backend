@@ -14,9 +14,9 @@ router.use(authMiddleware);
 router.use(checkRole("student"));
 
 router.get("/", listPeerReviews);
-router.get("/:reviewId", getPeerReview);
-router.post("/:reviewId/submit", submitPeerReview);
 router.get("/received/:labId", getReceivedReviews);
 router.post("/share", sharePeerReview);
+router.get("/:reviewId", getPeerReview);
+router.post("/:reviewId/submit", submitPeerReview);
 
 module.exports = router;
