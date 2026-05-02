@@ -25,9 +25,12 @@ const submissionSchema = new mongoose.Schema(
     },
     maxScore: { type: Number, default: 0 },
     overallFeedback: { type: String, default: '' },
+    inlineComments: { type: mongoose.Schema.Types.Mixed, default: {} },
+    instructorNote: { type: String, default: '' },
     testResults: [testResultSchema],
     late: { type: Boolean, default: false },
     gradedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    gradedAt: { type: Date },
     submittedAt: { type: Date },
   },
   { timestamps: true }
