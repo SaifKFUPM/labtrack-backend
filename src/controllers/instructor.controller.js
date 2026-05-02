@@ -45,6 +45,35 @@ const normalizeTestCases = (testCases = []) =>
     };
   });
 
+const normalizeLabFiles = (files = []) =>
+  files
+    .map((file) => {
+      if (typeof file === "string") {
+        return { name: file.trim(), size: 0, fileType: "", content: "" };
+      }
+
+      const name = file?.name || file?.fileName || file?.filename;
+      return {
+        name: String(name || "").trim(),
+        size: Number.parseInt(file?.size, 10) || 0,
+        fileType: file?.fileType || file?.type || "",
+        content: typeof file?.content === "string" ? file.content : "",
+      };
+    })
+    .filter((file) => file.name);
+
+const getLabFileNames = (body) => {
+  const explicitFiles = Array.isArray(body.files) ? body.files : [];
+  const starterFiles = Array.isArray(body.starterFiles) ? body.starterFiles : [];
+  const supportingFiles = Array.isArray(body.supportingFiles) ? body.supportingFiles : [];
+  const names = [...explicitFiles, ...starterFiles, ...supportingFiles]
+    .map((file) => (typeof file === "string" ? file : file?.name || file?.fileName || file?.filename))
+    .map((name) => String(name || "").trim())
+    .filter(Boolean);
+
+  return [...new Set(names)];
+};
+
 const normalizeSolutions = (solutions = []) =>
   solutions.map((solution, index) => {
     const files =
@@ -73,6 +102,15 @@ const buildLabUpdate = (body) => {
   const updates = { ...body };
   if (body.testCases !== undefined) updates.testCases = normalizeTestCases(body.testCases);
   if (body.solutions !== undefined) updates.solutions = normalizeSolutions(body.solutions);
+  if (body.starterFiles !== undefined) updates.starterFiles = normalizeLabFiles(body.starterFiles);
+  if (body.supportingFiles !== undefined) updates.supportingFiles = normalizeLabFiles(body.supportingFiles);
+  if (
+    body.files !== undefined ||
+    body.starterFiles !== undefined ||
+    body.supportingFiles !== undefined
+  ) {
+    updates.files = getLabFileNames(body);
+  }
   return updates;
 };
 
@@ -268,6 +306,9 @@ const createLab = asyncHandler(async (req, res) => {
     difficulty: difficulty || "medium",
     languages: languages || [],
     starterCode: req.body.starterCode || "",
+    files: getLabFileNames(req.body),
+    starterFiles: normalizeLabFiles(req.body.starterFiles || []),
+    supportingFiles: normalizeLabFiles(req.body.supportingFiles || []),
     status: req.body.status || "draft",
     createdBy: req.user._id,
     testCases: normalizeTestCases(req.body.testCases || []),

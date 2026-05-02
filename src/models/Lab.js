@@ -1,5 +1,15 @@
 const mongoose = require('mongoose');
 
+const labFileSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    size: { type: Number, default: 0 },
+    fileType: { type: String, default: '' },
+    content: { type: String, default: '' },
+  },
+  { _id: false }
+);
+
 const testCaseSchema = new mongoose.Schema({
   name: { type: String, default: '' },
   description: { type: String, required: true },
@@ -40,6 +50,9 @@ const labSchema = new mongoose.Schema(
     difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
     languages: [{ type: String }],
     starterCode: { type: String, default: '' },
+    files: [{ type: String, trim: true }],
+    starterFiles: [labFileSchema],
+    supportingFiles: [labFileSchema],
     status: { type: String, enum: ['draft', 'active', 'closed'], default: 'draft' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     testCases: [testCaseSchema],
