@@ -9,7 +9,8 @@ const buildResult = (testCase, index, result, error) => {
   const actualOutput = error
     ? `Compilation error: ${error.message}`
     : normalizeOutput(result?.output);
-  const isPassed = !error && !result?.isError && actualOutput === expectedOutput;
+  const isExecutionError = Boolean(error || result?.isError);
+  const isPassed = !isExecutionError && actualOutput === expectedOutput;
   const isVisible = testCase.visible !== false;
 
   return {
@@ -17,7 +18,7 @@ const buildResult = (testCase, index, result, error) => {
     name: testCase.name || testCase.description || `Test ${index + 1}`,
     description: testCase.description || testCase.name || `Test ${index + 1}`,
     passed: isPassed,
-    status: isPassed ? "pass" : "fail",
+    status: isPassed ? "pass" : isExecutionError ? "error" : "fail",
     points: testCase.points,
     earned: isPassed ? testCase.points : 0,
     visible: isVisible,
