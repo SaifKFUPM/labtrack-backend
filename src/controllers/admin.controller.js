@@ -31,7 +31,7 @@ const parseMeetingSchedule = (value) => {
 };
 
 const normalizeMeetingDays = (section) => {
-  if (Array.isArray(section.meetingDays)) {
+  if (Array.isArray(section.meetingDays) && section.meetingDays.length > 0) {
     return section.meetingDays.filter(Boolean);
   }
   if (section.meetingDays) {
