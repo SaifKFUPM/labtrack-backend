@@ -1,250 +1,255 @@
 # LabTrack Backend
 
-REST API for **LabTrack** — an integrated web platform for managing programming laboratory assignments at KFUPM.
+REST API for LabTrack, a programming lab management platform for KFUPM courses.
 
-Built with Node.js + Express + MongoDB.
+The backend is built with Node.js, Express, MongoDB Atlas, JWT authentication, JDoodle code execution, and Nodemailer password reset email.
 
----
+## Live Services
+
+| Service | URL |
+| --- | --- |
+| Backend API | `https://labtrack-backend-pjbq.onrender.com` |
+| Health check | `https://labtrack-backend-pjbq.onrender.com/api/health` |
+| Frontend | `https://labtrack-frontend-pearl.vercel.app` |
+
+Production backend hosting is on Render. Production frontend hosting is on Vercel.
 
 ## Team
 
-| Name               | ID        |
-| ------------------ | --------- |
-| Saif Alsadah       | 202257480 |
-| Haidar Aldahan     | 202256620 |
-| Hassan Al Henedi   | 202276380 |
+| Name | ID |
+| --- | --- |
+| Saif Alsadah | 202257480 |
+| Haidar Aldahan | 202256620 |
+| Hassan Al Henedi | 202276380 |
 | Muhannad Almelaifi | 202253960 |
-
----
 
 ## Tech Stack
 
-- **Runtime:** Node.js
-- **Framework:** Express.js
-- **Database:** MongoDB Atlas + Mongoose
-- **Auth:** JWT + bcryptjs
-- **Code Execution:** JDoodle API
-- **Email:** Nodemailer
-- **Deployment:** Railway (backend) + Vercel (frontend) + MongoDB Atlas (database)
+- Node.js and Express
+- MongoDB Atlas and Mongoose
+- JWT and bcryptjs
+- JDoodle API for code execution
+- Nodemailer for password reset email
+- Render for backend deployment
 
----
+## Features
+
+- Role-based authentication for students, instructors, and admins
+- Password reset flow with emailed reset links
+- Student lab listing, workspace save/run/submit flow, grades, history, reference solutions, and peer reviews
+- Instructor lab management, course sections, students, submissions, grading, analytics, plagiarism review, and settings
+- Admin user, course, department, system, security, analytics, and backup management
+- Seed script for demo users, courses, labs, test cases, and submissions
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js v18+
+- Node.js 18+
 - npm
-- MongoDB Atlas account
-- JDoodle API account
+- MongoDB Atlas database
+- JDoodle API credentials
+- SMTP account for password reset email
 
-### Installation
+### Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/labtrack-backend.git
-cd labtrack-backend
 npm install
 ```
 
-### Environment Variables
+### Environment
 
-Copy `.env.example` to `.env` and fill in all values:
+Copy the example file and fill in values:
 
 ```bash
 cp .env.example .env
 ```
 
-```
+Required variables:
+
+```env
 PORT=5000
-MONGO_URI=mongodb+srv://<user>:<password>@labtrack.xxxxx.mongodb.net/labtrack_db
-JWT_SECRET=your_secret_key
+MONGO_URI=mongodb+srv://<user>:<password>@<cluster>/?appName=labtrack
+MONGO_DB_NAME=labtrack_db
+
+JWT_SECRET=<strong-secret>
 JWT_EXPIRES_IN=30m
-JDOODLE_CLIENT_ID=your_client_id
-JDOODLE_CLIENT_SECRET=your_client_secret
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_email_password
-FRONTEND_URL=http://localhost:3000
+
+FRONTEND_URL=http://localhost:5173
+
+JDOODLE_CLIENT_ID=<jdoodle-client-id>
+JDOODLE_CLIENT_SECRET=<jdoodle-client-secret>
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=swe.labtrack.noreply@gmail.com
+SMTP_PASS=<gmail-app-password>
+MAIL_FROM="LabTrack <swe.labtrack.noreply@gmail.com>"
+
+PASSWORD_RESET_TTL_MINUTES=30
+REQUIRE_EMAIL_DELIVERY=true
+NODE_ENV=development
 ```
 
-### Run in Development
+Notes:
+
+- Do not commit `.env`.
+- Render provides `PORT`, so it does not need to be set there.
+- Use a Gmail app password for `SMTP_PASS`; do not use the normal Gmail password.
+- Set `FRONTEND_URL` to the Vercel URL in production.
+
+### Run Locally
 
 ```bash
 npm run dev
 ```
 
-Server starts on `http://localhost:5000`
+The API starts on:
 
----
-
-## Project Structure
-
-```
-labtrack-backend/
-├── src/
-│   ├── config/
-│   │   └── db.js                  # MongoDB connection
-│   ├── middleware/
-│   │   ├── authMiddleware.js      # JWT verification
-│   │   ├── roleMiddleware.js      # Role-based access control
-│   │   └── errorMiddleware.js     # Global error handler
-│   ├── models/
-│   │   ├── User.js
-│   │   ├── Course.js
-│   │   ├── Lab.js                 # embeds testCases + solutions
-│   │   ├── Submission.js          # embeds testResults + rubric
-│   │   └── Version.js
-│   ├── routes/
-│   │   ├── auth.routes.js
-│   │   ├── compile.routes.js
-│   │   ├── student.routes.js      # ✅ wired in app.js
-│   │   ├── instructor.routes.js   # ✅ implemented
-│   │   └── admin.routes.js        # ✅ implemented
-│   ├── controllers/
-│   │   ├── auth.controller.js
-│   │   ├── compile.controller.js
-│   │   ├── student.controller.js  # ✅ core student endpoints implemented
-│   │   ├── instructor.controller.js  # ✅ implemented
-│   │   └── admin.controller.js       # ✅ implemented
-│   ├── services/
-│   │   ├── compile.service.js     # JDoodle API wrapper
-│   │   ├── testRunner.service.js  # ✅ executes embedded lab testCases
-│   │   └── email.service.js       # 🔲 in progress
-│   └── utils/
-│       ├── asyncHandler.js
-│       └── generateToken.js
-├── app.js
-├── server.js
-├── .env
-├── .env.example
-└── package.json
+```txt
+http://localhost:5000
 ```
 
----
+Check:
 
-## API Reference
-
-### Auth
-
-| Method | Endpoint             | Access        | Description             |
-| ------ | -------------------- | ------------- | ----------------------- |
-| POST   | `/api/auth/register` | Public        | Register new user       |
-| POST   | `/api/auth/login`    | Public        | Login and get JWT token |
-| GET    | `/api/auth/me`       | Authenticated | Get current user        |
-
-### Compile
-
-| Method | Endpoint       | Access        | Description              |
-| ------ | -------------- | ------------- | ------------------------ |
-| POST   | `/api/compile` | Authenticated | Run code via JDoodle API |
-
-### Student (wired)
-
-| Method | Endpoint                             | Access  | Description                          |
-| ------ | ------------------------------------ | ------- | ------------------------------------ |
-| GET    | `/api/student/courses?enrolled=true` | Student | Get enrolled courses                 |
-| GET    | `/api/student/labs?status=active`    | Student | Get active labs for enrolled courses |
-| GET    | `/api/student/labs/:labId`           | Student | Get single lab details               |
-| POST   | `/api/student/submissions/:labId`    | Student | Submit code and run tests            |
-| GET    | `/api/student/labs/:labId/versions`  | Student | Get submission version history       |
-| POST   | `/api/student/labs/:labId/versions`  | Student | Save a new code version              |
-| GET    | `/api/student/grades`                | Student | Get graded submissions               |
-| GET    | `/api/student/submissions/:labId`    | Student | Get details for a submission         |
-| GET    | `/api/progress`                      | Student | Get progress map for current student |
-| PATCH  | `/api/progress/:labId`               | Student | Update a progress entry for a lab    |
-
-### Instructor
-
-| Method | Endpoint                                   | Access     | Description                    |
-| ------ | ------------------------------------------ | ---------- | ------------------------------ |
-| GET    | `/api/instructor/labs`                     | Instructor | List labs made by instructor   |
-| POST   | `/api/instructor/labs`                     | Instructor | Create a new lab               |
-| PATCH  | `/api/instructor/labs/:labId`              | Instructor | Update lab details             |
-| DELETE | `/api/instructor/labs/:labId`              | Instructor | Delete a lab                   |
-| PATCH  | `/api/instructor/labs/:labId/publish`      | Instructor | Publish a lab (status: active) |
-| GET    | `/api/instructor/labs/:labId/submissions`  | Instructor | List lab submissions           |
-| PATCH  | `/api/instructor/submissions/:subId/grade` | Instructor | Grade a submission             |
-| POST   | `/api/instructor/submissions/bulk-grade`   | Instructor | Bulk grade submissions         |
-
-### Admin
-
-All admin endpoints listed in [Checklist.md](./Checklist.md) are implemented and included in the backend routes.
-
-### Peer Reviews
-
-All peer-review endpoints listed in [Checklist.md](./Checklist.md) are implemented and included in the backend routes.
-
----
-
-## Contributing
-
-> **Before you start:** check [Checklist.md](./Checklist.md) to see what's already done and what's available to pick up.
-> **When you finish something:** mark it off in `Checklist.md`, update the progress table, and commit the checklist alongside your code.
-
----
-
-## Implementation Progress
-
-### ✅ Complete
-
-- [x] Project setup — Express, MongoDB Atlas, folder structure
-- [x] User model with bcrypt password hashing
-- [x] JWT authentication — register, login, `/me`
-- [x] Auth middleware — protects all routes
-- [x] Role middleware — student / instructor / admin access control
-- [x] Mongoose models — User, Course, Lab (embeds testCases + solutions), Submission (embeds testResults + rubric), Version
-- [x] JDoodle compile service — run code in sandbox
-- [x] `POST /api/compile` — working with Python, C++, Java, C
-- [x] Wire student routes into app.js (courses, labs, submit, grades, versions)
-- [x] Test runner service — run test cases, compare output, calculate score
-- [x] Instructor routes — lab management, submissions, plagiarism, analytics
-- [x] Admin routes — users, courses, departments, system, security, analytics
-- [x] Peer review routes — list, share, submit, receive, and update reviews
-- [x] Checklist coverage — 58 / 58 endpoints completed
-
-### 🔲 In Progress / Not Started
-
-- [ ] Email service — Nodemailer notifications
-- [ ] Email triggers — new lab, graded submission, welcome email
-- [ ] Deploy to Railway
-- [ ] Connect frontend (Vercel) to backend (Railway)
-
----
-
-## Authentication
-
-All protected routes require a Bearer token in the Authorization header:
-
+```txt
+http://localhost:5000/api/health
 ```
+
+### Production Start
+
+```bash
+npm start
+```
+
+## Demo Data
+
+Run the seed script when you need a fresh demo dataset:
+
+```bash
+npm run seed:demo
+```
+
+Seeded accounts use this password:
+
+```txt
+LabTrack123
+```
+
+Known demo accounts:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Admin | `admin@kfupm.edu.sa` | `LabTrack123` |
+| Instructor | `instructor@kfupm.edu.sa` | `LabTrack123` |
+| Student | `student1@kfupm.edu.sa` | `LabTrack123` |
+| Student | `student2@kfupm.edu.sa` | `LabTrack123` |
+
+The live database may also contain manually created users. Use the admin panel or forgot-password flow for those accounts.
+
+## API Overview
+
+All protected routes require:
+
+```txt
 Authorization: Bearer <token>
 ```
 
-Tokens expire after 30 minutes. Re-login to get a fresh token.
+### Auth
 
-### Roles
+| Method | Endpoint | Access | Description |
+| --- | --- | --- | --- |
+| POST | `/api/auth/register` | Public | Register a user |
+| POST | `/api/auth/login` | Public | Login and get JWT token |
+| POST | `/api/auth/forgot-password` | Public | Send password reset email |
+| POST | `/api/auth/reset-password/:token` | Public | Reset password from email token |
+| GET | `/api/auth/me` | Authenticated | Get current user |
 
-| Role         | Access                              |
-| ------------ | ----------------------------------- |
-| `student`    | `/api/student/*`, `/api/compile`    |
-| `instructor` | `/api/instructor/*`, `/api/compile` |
-| `admin`      | `/api/admin/*`                      |
+### Student
 
----
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/student/courses` | Get enrolled courses |
+| GET | `/api/student/labs` | Get assigned labs |
+| GET | `/api/student/labs/:labId` | Get lab details |
+| POST | `/api/student/labs/:labId/run` | Run current workspace against lab test cases |
+| POST | `/api/student/submissions/:labId` | Submit lab solution |
+| GET | `/api/student/labs/:labId/versions` | List saved versions |
+| POST | `/api/student/labs/:labId/versions` | Save a version |
+| GET | `/api/student/grades` | Get grades and feedback |
+| GET | `/api/student/submissions/:labId` | Get submission details |
+| GET | `/api/progress` | Get progress map |
+| PATCH | `/api/progress/:labId` | Update lab progress |
 
-## Email Domain
+### Instructor
 
-All user accounts must use a `@kfupm.edu.sa` email address. Registration is rejected for any other domain.
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/instructor/labs` | List instructor labs |
+| POST | `/api/instructor/labs` | Create a lab |
+| GET | `/api/instructor/labs/:labId` | Get lab details |
+| PATCH | `/api/instructor/labs/:labId` | Update lab |
+| DELETE | `/api/instructor/labs/:labId` | Delete lab |
+| PATCH | `/api/instructor/labs/:labId/publish` | Publish lab |
+| GET | `/api/instructor/labs/:labId/submissions` | List lab submissions |
+| PATCH | `/api/instructor/submissions/:subId/grade` | Grade submission |
+| POST | `/api/instructor/submissions/bulk-grade` | Bulk grade submissions |
+| GET | `/api/instructor/labs/:labId/analytics` | Lab analytics |
+| GET | `/api/instructor/labs/:labId/plagiarism` | Get plagiarism review |
+| POST | `/api/instructor/labs/:labId/check-plagiarism` | Run plagiarism check |
+| GET | `/api/instructor/courses` | List instructor courses |
+| GET | `/api/instructor/students` | List unique instructor students |
+| GET | `/api/instructor/settings` | Get instructor settings |
+| PATCH | `/api/instructor/settings` | Update instructor settings |
 
----
+### Admin
 
-## Code Execution
+Admin routes live under `/api/admin` and cover users, courses, departments, settings, monitoring, analytics, security, audit logs, and backups.
 
-Code is executed via the **JDoodle API** in a sandboxed environment. Supported languages:
+### Peer Reviews
 
-| Label    | JDoodle ID |
-| -------- | ---------- |
-| `python` | `python3`  |
-| `cpp`    | `cpp17`    |
-| `java`   | `java`     |
-| `c`      | `c`        |
+Peer review routes live under `/api/peer-reviews` and cover sharing, assigned reviews, received reviews, and review submission.
 
-Free tier limit: **200 compilations per day**.
+### Compile
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| POST | `/api/compile` | Run code through JDoodle |
+
+Supported labels:
+
+| Label | JDoodle ID |
+| --- | --- |
+| `python` | `python3` |
+| `cpp` | `cpp17` |
+| `java` | `java` |
+| `c` | `c` |
+| `javascript` | `nodejs` |
+
+## Deployment
+
+Render settings:
+
+```txt
+Build Command: npm install
+Start Command: npm start
+Health Check Path: /api/health
+```
+
+Required Render env values are the same as `.env.example`, except Render supplies `PORT`.
+
+After the frontend URL changes, update:
+
+```env
+FRONTEND_URL=https://labtrack-frontend-pearl.vercel.app
+```
+
+Then redeploy the Render service so CORS and password reset links use the correct frontend URL.
+
+## Security Notes
+
+- Never commit `.env`.
+- Rotate any secret that was accidentally shared.
+- Use app passwords or provider-specific SMTP credentials for email.
+- Keep `JWT_SECRET`, `MONGO_URI`, `JDOODLE_CLIENT_SECRET`, and `SMTP_PASS` private.
