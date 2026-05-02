@@ -55,12 +55,49 @@ const buildMeetingTimes = (section) => {
   return dayText;
 };
 
+const toId = (value) => {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (value._id) return value._id.toString();
+  return value.toString();
+};
+
+const formatUserSummary = (user) => {
+  if (!user || typeof user !== 'object' || !user._id) return null;
+  return {
+    id: toId(user),
+    fullName: user.fullName,
+    email: user.email,
+    studentId: user.studentId,
+    department: user.department,
+    status: user.status,
+  };
+};
+
+const getUniqueEnrolledStudentCount = (courses) => {
+  const ids = new Set();
+  courses.forEach((course) => {
+    (course.sections || []).forEach((section) => {
+      (section.students || []).forEach((student) => {
+        const id = toId(student);
+        if (id) ids.add(id);
+      });
+    });
+  });
+  return ids.size;
+};
+
+const populateCourseEnrollment = (course) => (
+  course.populate('sections.students', 'fullName email studentId department status')
+);
+
 const mapSectionInput = (section) => {
   const parsed = parseMeetingSchedule(section.meetingTimes);
+  const enrolledStudentIds = section.enrolledStudentIds ?? section.students ?? [];
   const mapped = {
     sectionNumber: section.sectionNumber,
-    instructor: section.instructorId || null,
-    students: section.enrolledStudentIds || [],
+    instructor: toId(section.instructorId) || null,
+    students: enrolledStudentIds.map(toId).filter(Boolean),
     capacity: section.capacity,
     meetingDays: normalizeMeetingDays(section),
     startTime: section.startTime || parsed.startTime,
@@ -82,8 +119,9 @@ const formatCourse = (c) => ({
   sections: (c.sections || []).map((s) => ({
     id: s._id,
     sectionNumber: s.sectionNumber,
-    instructorId: s.instructor,
-    enrolledStudentIds: s.students,
+    instructorId: toId(s.instructor),
+    enrolledStudentIds: (s.students || []).map(toId).filter(Boolean),
+    enrolledStudents: (s.students || []).map(formatUserSummary).filter(Boolean),
     meetingDays: normalizeMeetingDays(s),
     startTime: s.startTime || parseMeetingSchedule(s.meetingTimes).startTime,
     endTime: s.endTime || parseMeetingSchedule(s.meetingTimes).endTime,
@@ -228,7 +266,9 @@ const deleteUser = asyncHandler(async (req, res) => {
 
 // GET /api/admin/courses
 const getCourses = asyncHandler(async (req, res) => {
-  const courses = await Course.find().sort({ code: 1 });
+  const courses = await Course.find()
+    .sort({ code: 1 })
+    .populate('sections.students', 'fullName email studentId department status');
   res.json({ success: true, data: courses.map(formatCourse) });
 });
 
@@ -252,6 +292,7 @@ const createCourse = asyncHandler(async (req, res) => {
     sections: mappedSections,
   });
 
+  await populateCourseEnrollment(course);
   res.status(201).json({ success: true, data: formatCourse(course) });
 });
 
@@ -275,6 +316,7 @@ const updateCourse = asyncHandler(async (req, res) => {
   }
 
   await course.save();
+  await populateCourseEnrollment(course);
   res.json({ success: true, data: formatCourse(course) });
 });
 
@@ -614,9 +656,7 @@ const getAnalytics = asyncHandler(async (req, res) => {
   const courseStats = {
     total: courses.length,
     sections: courses.reduce((sum, course) => sum + (course.sections || []).length, 0),
-    enrolled: courses.reduce((sum, course) => (
-      sum + (course.sections || []).reduce((sectionSum, section) => sectionSum + (section.students || []).length, 0)
-    ), 0),
+    enrolled: getUniqueEnrolledStudentCount(courses),
   };
 
   const graded = allSubmissions.filter((submission) => submission.status === 'graded' && submission.score != null);
