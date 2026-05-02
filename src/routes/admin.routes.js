@@ -21,6 +21,7 @@ const {
   updateMaintenance,
   getBackups,
   triggerBackup,
+  deleteBackup,
   getBackupSchedule,
   updateBackupSchedule,
   getSystemSettings,
@@ -65,6 +66,7 @@ router.patch('/system/maintenance', updateMaintenance);
 // Backups
 router.get('/system/backups', getBackups);
 router.post('/system/backups/trigger', triggerBackup);
+router.delete('/system/backups/:backupId', deleteBackup);
 
 // Backup Schedule
 router.get('/system/backup-schedule', getBackupSchedule);

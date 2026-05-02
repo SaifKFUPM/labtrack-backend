@@ -328,16 +328,16 @@ const getBackups = asyncHandler(async (req, res) => {
 
 // POST /api/admin/system/backups/trigger
 const triggerBackup = asyncHandler(async (req, res) => {
-  const { scope } = req.body;
+  const { name, scope, retention } = req.body;
   const settings = await SystemSettings.getSingleton();
 
   const backup = {
-    name: `backup-${Date.now()}`,
+    name: name || `backup-${Date.now()}`,
     type: 'manual',
     scope: scope || 'full',
     size: '0 MB',
     status: 'completed',
-    retention: settings.backupSchedule.retentionDays,
+    retention: retention || settings.backupSchedule?.retentionDays || 30,
   };
 
   settings.backups.push(backup);
@@ -345,7 +345,17 @@ const triggerBackup = asyncHandler(async (req, res) => {
   await settings.save();
 
   const saved = settings.backups[settings.backups.length - 1];
-  res.status(201).json({ success: true, data: { backupId: saved._id, status: saved.status } });
+  res.status(201).json({ success: true, data: { id: saved._id, name: saved.name, type: saved.type, scope: saved.scope, size: saved.size, status: saved.status, ts: saved.createdAt, retention: saved.retention } });
+});
+
+// DELETE /api/admin/system/backups/:backupId
+const deleteBackup = asyncHandler(async (req, res) => {
+  const settings = await SystemSettings.getSingleton();
+  const { backupId } = req.params;
+  settings.backups = settings.backups.filter((b) => b._id.toString() !== backupId);
+  settings.markModified('backups');
+  await settings.save();
+  res.json({ success: true, message: 'Backup deleted' });
 });
 
 // ─── Backup Schedule ──────────────────────────────────────────────────────────
@@ -359,7 +369,7 @@ const getBackupSchedule = asyncHandler(async (req, res) => {
 // PATCH /api/admin/system/backup-schedule
 const updateBackupSchedule = asyncHandler(async (req, res) => {
   const settings = await SystemSettings.getSingleton();
-  Object.assign(settings.backupSchedule, req.body);
+  settings.backupSchedule = { ...(settings.backupSchedule || {}), ...req.body };
   settings.markModified('backupSchedule');
   await settings.save();
   res.json({ success: true, data: settings.backupSchedule });
@@ -387,17 +397,11 @@ const updateSystemSettings = asyncHandler(async (req, res) => {
   const { execution, languages, api, testing, notifications } = req.body;
   const settings = await SystemSettings.getSingleton();
 
-  if (execution !== undefined) {
-    Object.assign(settings.execution, execution);
-    settings.markModified('execution');
-  }
-  if (languages !== undefined) settings.languages = languages;
-  if (api !== undefined) {
-    Object.assign(settings.api, api);
-    settings.markModified('api');
-  }
-  if (testing !== undefined) settings.testing = { ...settings.testing, ...testing };
-  if (notifications !== undefined) settings.notifications = { ...settings.notifications, ...notifications };
+  if (execution !== undefined) { settings.execution = execution; settings.markModified('execution'); }
+  if (languages !== undefined) { settings.languages = languages; settings.markModified('languages'); }
+  if (api !== undefined) { settings.api = api; settings.markModified('api'); }
+  if (testing !== undefined) { settings.testing = testing; settings.markModified('testing'); }
+  if (notifications !== undefined) { settings.notifications = notifications; settings.markModified('notifications'); }
 
   await settings.save();
   res.json({
@@ -423,7 +427,7 @@ const getSecuritySettings = asyncHandler(async (req, res) => {
 // PATCH /api/admin/security/settings
 const updateSecuritySettings = asyncHandler(async (req, res) => {
   const settings = await SystemSettings.getSingleton();
-  Object.assign(settings.security, req.body);
+  settings.security = req.body;
   settings.markModified('security');
   await settings.save();
   res.json({ success: true, data: settings.security });
@@ -568,6 +572,7 @@ module.exports = {
   updateMaintenance,
   getBackups,
   triggerBackup,
+  deleteBackup,
   getBackupSchedule,
   updateBackupSchedule,
   getSystemSettings,

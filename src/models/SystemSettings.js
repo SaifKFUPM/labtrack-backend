@@ -14,21 +14,66 @@ const backupRecordSchema = new mongoose.Schema(
 
 const systemSettingsSchema = new mongoose.Schema(
   {
-    // singleton guard
     _singleton: { type: String, default: 'global', unique: true },
 
     execution: {
-      compilationTimeoutSec: { type: Number, default: 30 },
-      executionTimeoutSec: { type: Number, default: 10 },
-      memoryLimitMB: { type: Number, default: 256 },
+      type: mongoose.Schema.Types.Mixed,
+      default: {
+        compilationTimeoutSec: 30,
+        executionTimeoutSec: 10,
+        memoryLimitMB: 256,
+        maxOutputKB: 512,
+        sandboxEnabled: true,
+      },
     },
-    languages: { type: [String], default: ['python', 'javascript', 'java', 'c', 'cpp'] },
+
+    languages: {
+      type: mongoose.Schema.Types.Mixed,
+      default: [
+        { id: 'python',     label: 'Python 3.11',           icon: '🐍', enabled: true  },
+        { id: 'cpp',        label: 'C++ 17',                icon: '⚙️', enabled: true  },
+        { id: 'java',       label: 'Java 21',               icon: '☕', enabled: true  },
+        { id: 'javascript', label: 'JavaScript (Node 20)',  icon: '🟨', enabled: true  },
+        { id: 'c',          label: 'C 11',                  icon: '🔵', enabled: false },
+        { id: 'rust',       label: 'Rust 1.75',             icon: '🦀', enabled: false },
+        { id: 'go',         label: 'Go 1.22',               icon: '🐹', enabled: false },
+        { id: 'r',          label: 'R 4.3',                 icon: '📊', enabled: false },
+      ],
+    },
+
     api: {
-      judgeApiUrl: { type: String, default: '' },
-      judgeApiKey: { type: String, default: '' },
+      type: mongoose.Schema.Types.Mixed,
+      default: {
+        judgeApiUrl: '',
+        judgeApiKey: '',
+        aiAssistApiKey: '',
+        aiAssistEnabled: true,
+        aiAssistModel: 'gpt-4o',
+      },
     },
-    testing: { type: mongoose.Schema.Types.Mixed, default: {} },
-    notifications: { type: mongoose.Schema.Types.Mixed, default: {} },
+
+    testing: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {
+        defaultTestCaseTimeout: 5,
+        maxTestCasesPerLab: 50,
+        allowCustomTestCases: true,
+        showTestOutputToStudent: true,
+        partialCreditEnabled: true,
+        autoGradeOnSubmit: true,
+      },
+    },
+
+    notifications: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {
+        emailNotificationsEnabled: true,
+        submissionAlerts: true,
+        gradePublishedAlerts: true,
+        systemAlerts: true,
+        digestFrequency: 'daily',
+      },
+    },
 
     maintenance: {
       active: { type: Boolean, default: false },
@@ -47,22 +92,40 @@ const systemSettingsSchema = new mongoose.Schema(
     },
 
     backupSchedule: {
-      enabled: { type: Boolean, default: false },
-      frequency: { type: String, default: 'daily' },
-      time: { type: String, default: '02:00' },
-      retentionDays: { type: Number, default: 30 },
+      type: mongoose.Schema.Types.Mixed,
+      default: {
+        enabled: true,
+        frequency: 'daily',
+        time: '02:00',
+        dayOfWeek: 'sunday',
+        dayOfMonth: 1,
+        scope: 'full',
+        retentionDays: 30,
+        destination: 'local',
+        s3Bucket: 'labtrack-backups',
+        notifyOnFailure: true,
+        notifyOnSuccess: false,
+      },
     },
 
     backups: [backupRecordSchema],
 
     security: {
-      twoFactorRequired: { type: Boolean, default: false },
-      sessionTimeoutMin: { type: Number, default: 60 },
-      maxLoginAttempts: { type: Number, default: 5 },
-      lockoutDurationMin: { type: Number, default: 15 },
-      passwordExpiryDays: { type: Number, default: 90 },
-      requireStrongPassword: { type: Boolean, default: true },
-      examMode: { type: Boolean, default: false },
+      type: mongoose.Schema.Types.Mixed,
+      default: {
+        twoFactorRequired: { admin: true, instructor: false, student: false },
+        sessionTimeoutMin: { admin: 30, instructor: 120, student: 240 },
+        maxLoginAttempts: 5,
+        lockoutDurationMin: 15,
+        passwordExpiryDays: 90,
+        requireStrongPassword: true,
+        examMode: {
+          enabled: false,
+          allowedIpRanges: ['10.0.0.0/24', '192.168.1.0/24'],
+          blockVPN: true,
+          lockBrowser: false,
+        },
+      },
     },
 
     analyticsReports: [
@@ -77,7 +140,6 @@ const systemSettingsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// helper to get or create the singleton document
 systemSettingsSchema.statics.getSingleton = async function () {
   let doc = await this.findOne({ _singleton: 'global' });
   if (!doc) doc = await this.create({ _singleton: 'global' });
