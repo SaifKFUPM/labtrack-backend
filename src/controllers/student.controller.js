@@ -189,18 +189,39 @@ const getGrades = asyncHandler(async (req, res) => {
     studentId: req.user._id,
     status: "graded",
   })
-    .populate("labId", "title points dueDate")
+    .populate({
+      path: "labId",
+      select: "title points dueDate courseId",
+      populate: { path: "courseId", select: "code name semester" },
+    })
     .sort({ submittedAt: -1 });
 
   const formatted = submissions.map((sub) => ({
     id: sub._id,
-    lab: sub.labId?.title || null,
+    lab: sub.labId
+      ? {
+          id: sub.labId._id,
+          title: sub.labId.title,
+          points: sub.labId.points,
+          dueDate: sub.labId.dueDate,
+          courseCode: sub.labId.courseId?.code,
+          courseName: sub.labId.courseId?.name,
+          semester: sub.labId.courseId?.semester,
+        }
+      : null,
+    labTitle: sub.labId?.title || null,
+    courseCode: sub.labId?.courseId?.code || null,
     score: sub.score,
+    maxScore: sub.maxScore || sub.labId?.points || 0,
     testsPassed: (sub.testResults || []).filter((result) => result.passed)
       .length,
     testsTotal: (sub.testResults || []).length,
-    grade: sub.rubric,
+    rubric: sub.rubric,
     feedback: sub.overallFeedback,
+    overallFeedback: sub.overallFeedback,
+    instructorNote: sub.instructorNote,
+    inlineComments: sub.inlineComments,
+    gradedAt: sub.gradedAt,
     status: sub.status,
     submittedAt: sub.submittedAt,
   }));
