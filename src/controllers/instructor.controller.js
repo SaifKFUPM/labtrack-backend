@@ -192,30 +192,56 @@ const getInstructorStudents = asyncHandler(async (req, res) => {
     .populate("sections.students", "fullName email studentId department status lastLogin")
     .sort({ code: 1 });
 
-  const students = [];
+  const studentsById = new Map();
   for (const course of courses) {
     for (const section of course.sections || []) {
       if (String(section.instructor) !== String(req.user._id)) continue;
 
       for (const student of section.students || []) {
         if (!student || typeof student !== "object") continue;
-        students.push({
-          id: student._id,
-          fullName: student.fullName,
-          email: student.email,
-          studentId: student.studentId,
-          department: student.department,
-          status: student.status,
-          lastLogin: student.lastLogin,
+
+        const studentKey = student._id.toString();
+        if (!studentsById.has(studentKey)) {
+          studentsById.set(studentKey, {
+            id: student._id,
+            fullName: student.fullName,
+            email: student.email,
+            studentId: student.studentId,
+            department: student.department,
+            status: student.status,
+            lastLogin: student.lastLogin,
+            enrollments: [],
+          });
+        }
+
+        const entry = studentsById.get(studentKey);
+        const enrollment = {
           courseId: course._id,
           courseCode: course.code,
           courseName: course.name,
           semester: course.semester,
           sectionNumber: section.sectionNumber,
-        });
+        };
+        const enrollmentKey = `${enrollment.courseId}-${enrollment.sectionNumber}`;
+        const alreadyIncluded = entry.enrollments.some(
+          (item) => `${item.courseId}-${item.sectionNumber}` === enrollmentKey,
+        );
+        if (!alreadyIncluded) entry.enrollments.push(enrollment);
       }
     }
   }
+
+  const students = Array.from(studentsById.values())
+    .map((student) => ({
+      ...student,
+      courseSections: student.enrollments.map((enrollment) => (
+        [
+          enrollment.courseCode,
+          enrollment.sectionNumber ? `SEC ${enrollment.sectionNumber}` : null,
+        ].filter(Boolean).join(" - ")
+      )),
+    }))
+    .sort((a, b) => String(a.fullName || "").localeCompare(String(b.fullName || "")));
 
   res.json({ success: true, data: students });
 });
