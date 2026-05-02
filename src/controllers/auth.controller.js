@@ -95,6 +95,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
   if (user && user.active && user.status === 'active') {
     const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetUrl = buildResetUrl(resetToken);
     user.passwordResetToken = hashResetToken(resetToken);
     user.passwordResetExpires = new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60 * 1000);
     await user.save({ validateBeforeSave: false });
@@ -103,14 +104,18 @@ const forgotPassword = asyncHandler(async (req, res) => {
       await sendPasswordResetEmail({
         to: user.email,
         name: user.fullName,
-        resetUrl: buildResetUrl(resetToken),
+        resetUrl,
       });
     } catch (error) {
-      user.passwordResetToken = undefined;
-      user.passwordResetExpires = undefined;
-      await user.save({ validateBeforeSave: false });
-      res.status(500);
-      throw new Error('Failed to send password reset email');
+      if (requireEmailDelivery()) {
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save({ validateBeforeSave: false });
+        res.status(500);
+        throw new Error('Failed to send password reset email');
+      }
+
+      console.warn(`Password reset email failed in development. Use this reset link: ${resetUrl}`);
     }
   }
 
