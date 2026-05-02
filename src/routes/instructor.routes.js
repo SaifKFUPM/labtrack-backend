@@ -3,6 +3,9 @@ const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 const checkRole = require("../middleware/roleMiddleware");
 const {
+  getInstructorSettings,
+  updateInstructorSettings,
+  getInstructorStudents,
   getLabs,
   getLabById,
   createLab,
@@ -24,6 +27,9 @@ router.use(checkRole("instructor"));
 // Course management
 router.get("/courses", getInstructorCourses);
 router.post("/courses", createCourse);
+router.get("/students", getInstructorStudents);
+router.get("/settings", getInstructorSettings);
+router.patch("/settings", updateInstructorSettings);
 
 router.get("/labs", getLabs);
 router.post("/labs", createLab);

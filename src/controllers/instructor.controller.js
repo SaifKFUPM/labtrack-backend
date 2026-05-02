@@ -1,6 +1,7 @@
 const asyncHandler = require("../utils/asyncHandler");
 const Lab = require("../models/Lab");
 const Course = require("../models/Course");
+const User = require("../models/User");
 
 const generateJoinCode = async () => {
   let code, exists;
@@ -87,6 +88,99 @@ const formatLab = (lab) => {
     semester: course?.semester,
   };
 };
+
+const formatInstructorSettings = (user) => ({
+  id: user._id,
+  fullName: user.fullName,
+  email: user.email,
+  role: user.role,
+  department: user.department,
+  status: user.status,
+  lastLogin: user.lastLogin,
+});
+
+const getInstructorSettings = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select("-password");
+  if (!user) {
+    res.status(404);
+    throw new Error("Instructor not found");
+  }
+
+  res.json({ success: true, data: formatInstructorSettings(user) });
+});
+
+const updateInstructorSettings = asyncHandler(async (req, res) => {
+  const { fullName, department, currentPassword, newPassword } = req.body;
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.status(404);
+    throw new Error("Instructor not found");
+  }
+
+  if (fullName !== undefined) {
+    if (!String(fullName).trim()) {
+      res.status(400);
+      throw new Error("Full name cannot be empty");
+    }
+    user.fullName = String(fullName).trim();
+  }
+
+  if (department !== undefined) {
+    user.department = String(department || "").trim();
+  }
+
+  if (newPassword) {
+    if (!currentPassword) {
+      res.status(400);
+      throw new Error("Current password is required");
+    }
+    if (!(await user.matchPassword(currentPassword))) {
+      res.status(400);
+      throw new Error("Current password is incorrect");
+    }
+    user.password = newPassword;
+  }
+
+  await user.save();
+
+  res.json({ success: true, data: formatInstructorSettings(user) });
+});
+
+const getInstructorStudents = asyncHandler(async (req, res) => {
+  const courses = await Course.find({
+    "sections.instructor": req.user._id,
+    active: true,
+  })
+    .populate("sections.students", "fullName email studentId department status lastLogin")
+    .sort({ code: 1 });
+
+  const students = [];
+  for (const course of courses) {
+    for (const section of course.sections || []) {
+      if (String(section.instructor) !== String(req.user._id)) continue;
+
+      for (const student of section.students || []) {
+        if (!student || typeof student !== "object") continue;
+        students.push({
+          id: student._id,
+          fullName: student.fullName,
+          email: student.email,
+          studentId: student.studentId,
+          department: student.department,
+          status: student.status,
+          lastLogin: student.lastLogin,
+          courseId: course._id,
+          courseCode: course.code,
+          courseName: course.name,
+          semester: course.semester,
+          sectionNumber: section.sectionNumber,
+        });
+      }
+    }
+  }
+
+  res.json({ success: true, data: students });
+});
 
 // GET /api/instructor/courses
 const getInstructorCourses = asyncHandler(async (req, res) => {
@@ -242,6 +336,9 @@ const publishLab = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  getInstructorSettings,
+  updateInstructorSettings,
+  getInstructorStudents,
   getLabs,
   getLabById,
   createLab,
