@@ -1,4 +1,4 @@
-const { runTests } = require("../services/testRunner.service");
+const { runLabTestCases, runTests } = require("../services/testRunner.service");
 const Course = require("../models/Course");
 const Lab = require("../models/Lab");
 const Submission = require("../models/Submission");
@@ -127,6 +127,47 @@ const getLabById = asyncHandler(async (req, res) => {
   });
 
   res.json({ success: true, data: formatLabForStudent(lab, allowedCourse, submission) });
+});
+
+// POST /api/student/labs/:labId/run
+const runLabCode = asyncHandler(async (req, res) => {
+  const { code, language } = req.body;
+  const { labId } = req.params;
+
+  if (!code || !language) {
+    res.status(400);
+    throw new Error("Code and language are required");
+  }
+
+  const lab = await Lab.findById(labId);
+  if (!lab) {
+    res.status(404);
+    throw new Error("Lab not found");
+  }
+
+  const allowedCourse = await Course.findOne({
+    _id: lab.courseId,
+    "sections.students": req.user._id,
+    active: true,
+  });
+
+  if (!allowedCourse) {
+    res.status(403);
+    throw new Error("You do not have access to this lab");
+  }
+
+  const testSummary = await runLabTestCases({ lab, code, language });
+
+  res.json({
+    success: true,
+    data: {
+      testResults: testSummary.results,
+      passed: testSummary.passed,
+      total: testSummary.total,
+      score: testSummary.score,
+      maxScore: testSummary.maxScore,
+    },
+  });
 });
 
 // POST /api/student/submissions/:labId
@@ -269,8 +310,15 @@ const updateProgress = asyncHandler(async (req, res) => {
   const { labId } = req.params;
   const { status, code, submittedAt } = req.body;
 
+  const statusAliases = {
+    not_started: "not started",
+    "not-started": "not started",
+    in_progress: "in progress",
+    "in-progress": "in progress",
+  };
+  const normalizedStatus = statusAliases[status] || status;
   const allowedStatuses = ["not started", "in progress", "submitted", "graded"];
-  if (status && !allowedStatuses.includes(status)) {
+  if (status && !allowedStatuses.includes(normalizedStatus)) {
     res.status(400);
     throw new Error("Invalid status");
   }
@@ -279,7 +327,7 @@ const updateProgress = asyncHandler(async (req, res) => {
     { labId, studentId: req.user._id },
     {
       $set: {
-        status: status || undefined,
+        status: normalizedStatus || undefined,
         code: code || undefined,
         submittedAt: submittedAt || undefined,
       },
@@ -403,6 +451,7 @@ module.exports = {
   getCourses,
   getLabs,
   getLabById,
+  runLabCode,
   submitLabCode,
   getGrades,
   getSubmissionDetails,

@@ -1,12 +1,16 @@
 const mongoose = require('mongoose');
 
 const testResultSchema = new mongoose.Schema({
+  testCaseId: { type: mongoose.Schema.Types.ObjectId },
+  name: { type: String },
   description: { type: String },
   input: { type: String },
   passed: { type: Boolean },
+  status: { type: String, enum: ['pass', 'fail', 'error', 'hidden'] },
   actualOutput: { type: String },
   expectedOutput: { type: String },
   points: { type: Number },
+  earned: { type: Number },
   visible: { type: Boolean },
 });
 

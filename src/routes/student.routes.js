@@ -6,6 +6,7 @@ const {
   getCourses,
   getLabs,
   getLabById,
+  runLabCode,
   submitLabCode,
   getGrades,
   saveVersion,
@@ -21,6 +22,7 @@ router.get("/courses", getCourses);
 router.post("/courses/join", joinCourse);
 router.get("/labs", getLabs);
 router.get("/labs/:labId", getLabById);
+router.post("/labs/:labId/run", runLabCode);
 router.post("/submissions/:labId", submitLabCode);
 router.get("/submissions/:labId", getSubmissionDetails);
 router.get("/grades", getGrades);
