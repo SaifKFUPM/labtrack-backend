@@ -38,7 +38,7 @@ const login = asyncHandler(async (req, res) => {
     throw new Error('Invalid email or password');
   }
 
-  if (!user.active) {
+  if (!user.active || user.status !== 'active') {
     res.status(403);
     throw new Error('Account is deactivated');
   }

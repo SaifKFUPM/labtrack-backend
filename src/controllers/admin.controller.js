@@ -103,7 +103,10 @@ const updateUser = asyncHandler(async (req, res) => {
 
   if (role !== undefined) user.role = role;
   if (department !== undefined) user.department = department;
-  if (status !== undefined) user.status = status;
+  if (status !== undefined) {
+    user.status = status;
+    user.active = status === 'active';
+  }
 
   await user.save();
 
@@ -132,6 +135,7 @@ const deleteUser = asyncHandler(async (req, res) => {
   }
 
   user.status = 'inactive';
+  user.active = false;
   await user.save();
 
   res.json({ success: true, message: 'User deactivated' });
