@@ -13,7 +13,7 @@ const listPeerReviews = asyncHandler(async (req, res) => {
 
 // GET /api/peer-reviews/:reviewId
 const getPeerReview = asyncHandler(async (req, res) => {
-  const rev = await PeerReview.findById(req.params.reviewId);
+  const rev = await PeerReview.findById(req.params.reviewId).populate('labId', 'title');
   if (!rev) {
     res.status(404);
     throw new Error("Peer review not found");
