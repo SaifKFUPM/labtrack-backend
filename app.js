@@ -1,6 +1,7 @@
 const compileRoutes = require("./src/routes/compile.routes");
 const authRoutes = require("./src/routes/auth.routes");
 const studentRoutes = require("./src/routes/student.routes");
+const progressRoutes = require("./src/routes/progress.routes");
 const adminRoutes = require("./src/routes/admin.routes");
 const instructorRoutes = require("./src/routes/instructor.routes");
 const peerRoutes = require("./src/routes/peer.routes");
@@ -25,6 +26,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/compile", compileRoutes);
 app.use("/api/student", studentRoutes);
+app.use("/api/progress", progressRoutes);
 app.use("/api/instructor", instructorRoutes);
 app.use("/api/peer-reviews", peerRoutes);
 app.use("/api/admin", adminRoutes);

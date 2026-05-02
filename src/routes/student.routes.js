@@ -11,8 +11,6 @@ const {
   saveVersion,
   getVersions,
   getSubmissionDetails,
-  getProgress,
-  updateProgress,
   joinCourse,
 } = require("../controllers/student.controller");
 
@@ -26,8 +24,6 @@ router.get("/labs/:labId", getLabById);
 router.post("/submissions/:labId", submitLabCode);
 router.get("/submissions/:labId", getSubmissionDetails);
 router.get("/grades", getGrades);
-router.get("/progress", getProgress);
-router.patch("/progress/:labId", updateProgress);
 router.post("/labs/:labId/versions", saveVersion);
 router.get("/labs/:labId/versions", getVersions);
 
