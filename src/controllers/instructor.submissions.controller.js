@@ -7,8 +7,8 @@ const formatTestResult = (result) => {
   return {
     ...obj,
     id: obj._id || obj.testCaseId,
-    status: obj.passed ? "pass" : "fail",
-    earned: obj.points || 0,
+    status: obj.status || (obj.passed ? "pass" : "fail"),
+    earned: obj.earned ?? (obj.passed ? obj.points || 0 : 0),
   };
 };
 

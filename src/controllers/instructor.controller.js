@@ -2,6 +2,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const Lab = require("../models/Lab");
 const Course = require("../models/Course");
 const User = require("../models/User");
+const Submission = require("../models/Submission");
 
 const generateJoinCode = async () => {
   let code, exists;
@@ -114,9 +115,43 @@ const buildLabUpdate = (body) => {
   return updates;
 };
 
-const formatLab = (lab) => {
+const emptySubmissionStats = {
+  submissionCount: 0,
+  submittedCount: 0,
+  gradedCount: 0,
+};
+
+const getSubmissionStatsByLab = async (labIds) => {
+  const ids = labIds.filter(Boolean);
+  if (ids.length === 0) return new Map();
+
+  const stats = await Submission.aggregate([
+    { $match: { labId: { $in: ids } } },
+    {
+      $group: {
+        _id: "$labId",
+        submissionCount: { $sum: 1 },
+        submittedCount: {
+          $sum: {
+            $cond: [{ $in: ["$status", ["submitted", "graded"]] }, 1, 0],
+          },
+        },
+        gradedCount: {
+          $sum: {
+            $cond: [{ $eq: ["$status", "graded"] }, 1, 0],
+          },
+        },
+      },
+    },
+  ]);
+
+  return new Map(stats.map((item) => [item._id.toString(), item]));
+};
+
+const formatLab = (lab, submissionStats = emptySubmissionStats) => {
   const obj = lab.toObject ? lab.toObject() : lab;
   const course = obj.courseId && typeof obj.courseId === "object" ? obj.courseId : null;
+  const stats = submissionStats || emptySubmissionStats;
   return {
     ...obj,
     id: obj._id,
@@ -124,6 +159,9 @@ const formatLab = (lab) => {
     courseCode: course?.code,
     courseName: course?.name,
     semester: course?.semester,
+    submissionCount: stats.submissionCount || 0,
+    submittedCount: stats.submittedCount || 0,
+    gradedCount: stats.gradedCount || 0,
   };
 };
 
@@ -296,7 +334,11 @@ const getLabs = asyncHandler(async (req, res) => {
   const labs = await Lab.find(query)
     .populate("courseId", "code name semester")
     .sort({ createdAt: -1 });
-  res.json({ success: true, data: labs.map(formatLab) });
+  const statsByLab = await getSubmissionStatsByLab(labs.map((lab) => lab._id));
+  res.json({
+    success: true,
+    data: labs.map((lab) => formatLab(lab, statsByLab.get(lab._id.toString()))),
+  });
 });
 
 // GET /api/instructor/labs/:labId
@@ -311,7 +353,8 @@ const getLabById = asyncHandler(async (req, res) => {
     throw new Error("Not authorized to view this lab");
   }
 
-  res.json({ success: true, data: formatLab(lab) });
+  const statsByLab = await getSubmissionStatsByLab([lab._id]);
+  res.json({ success: true, data: formatLab(lab, statsByLab.get(lab._id.toString())) });
 });
 
 // POST /api/instructor/labs
@@ -362,7 +405,8 @@ const updateLab = asyncHandler(async (req, res) => {
   await lab.save();
   await lab.populate("courseId", "code name semester");
 
-  res.json({ success: true, data: formatLab(lab) });
+  const statsByLab = await getSubmissionStatsByLab([lab._id]);
+  res.json({ success: true, data: formatLab(lab, statsByLab.get(lab._id.toString())) });
 });
 
 // DELETE /api/instructor/labs/:labId
@@ -399,7 +443,8 @@ const publishLab = asyncHandler(async (req, res) => {
 
   // Note: email notifications can be triggered here when email.service is implemented
 
-  res.json({ success: true, data: formatLab(lab) });
+  const statsByLab = await getSubmissionStatsByLab([lab._id]);
+  res.json({ success: true, data: formatLab(lab, statsByLab.get(lab._id.toString())) });
 });
 
 module.exports = {
