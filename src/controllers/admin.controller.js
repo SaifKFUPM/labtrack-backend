@@ -31,10 +31,13 @@ const parseMeetingSchedule = (value) => {
 };
 
 const normalizeMeetingDays = (section) => {
-  if (Array.isArray(section.meetingDays) && section.meetingDays.length > 0) {
-    return section.meetingDays.filter(Boolean);
+  const meetingDays = Array.isArray(section.meetingDays)
+    ? section.meetingDays.filter(Boolean)
+    : [];
+  if (meetingDays.length > 0) {
+    return meetingDays;
   }
-  if (section.meetingDays) {
+  if (typeof section.meetingDays === 'string' && section.meetingDays.trim()) {
     return parseMeetingSchedule(section.meetingDays).meetingDays;
   }
   return parseMeetingSchedule(section.meetingTimes).meetingDays;
