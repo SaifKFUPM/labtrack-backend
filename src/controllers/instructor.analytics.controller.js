@@ -79,25 +79,46 @@ const buildTimeline = (submissions) => {
   return Array.from(counts.entries()).map(([label, count]) => ({ label, count }));
 };
 
-const buildTopSubmitters = (submissions) => (
-  submissions
-    .filter((submission) => submission.studentId)
-    .sort((a, b) => (b.score || 0) - (a.score || 0))
+const compareSubmitterSubmissions = (a, b) => {
+  const scoreDiff = (b.score || 0) - (a.score || 0);
+  if (scoreDiff !== 0) return scoreDiff;
+  return new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0);
+};
+
+const buildTopSubmitters = (submissions) => {
+  const bestByStudent = new Map();
+
+  submissions.forEach((submission) => {
+    const student = submission.studentId && typeof submission.studentId === "object"
+      ? submission.studentId
+      : null;
+    const studentKey = toId(student?._id || submission.studentId);
+    if (!studentKey) return;
+
+    const current = bestByStudent.get(studentKey);
+    if (!current || compareSubmitterSubmissions(current, submission) > 0) {
+      bestByStudent.set(studentKey, submission);
+    }
+  });
+
+  return Array.from(bestByStudent.values())
+    .sort(compareSubmitterSubmissions)
     .slice(0, 6)
     .map((submission) => {
       const student = submission.studentId && typeof submission.studentId === "object"
         ? submission.studentId
         : null;
+      const studentKey = toId(student?._id || submission.studentId);
       return {
-        id: student?._id || submission.studentId,
-        studentId: student?._id || submission.studentId,
+        id: studentKey,
+        studentId: studentKey,
         studentName: student?.fullName || "Student",
         studentEmail: student?.email || "",
         score: submission.score ?? null,
         submittedAt: submission.submittedAt,
       };
-    })
-);
+    });
+};
 
 const buildTestCaseAnalytics = (lab, submissions) => (
   (lab.testCases || []).map((testCase, index) => {
