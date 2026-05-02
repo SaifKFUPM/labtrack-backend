@@ -23,6 +23,7 @@ const register = asyncHandler(async (req, res) => {
       email: user.email,
       role: user.role,
       department: user.department,
+      studentId: user.studentId,
       status: user.status,
     },
   });
@@ -55,6 +56,7 @@ const login = asyncHandler(async (req, res) => {
       email: user.email,
       role: user.role,
       department: user.department,
+      studentId: user.studentId,
       status: user.status,
     },
   });
@@ -72,6 +74,7 @@ const getMe = asyncHandler(async (req, res) => {
       email: user.email,
       role: user.role,
       department: user.department,
+      studentId: user.studentId,
       status: user.status,
     },
   });

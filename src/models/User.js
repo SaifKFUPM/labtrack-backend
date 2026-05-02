@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const extractStudentIdFromEmail = (email) => {
+  const match = String(email || '').trim().toLowerCase().match(/^s(\d+)@kfupm\.edu\.sa$/);
+  return match ? match[1] : '';
+};
+
 const userSchema = new mongoose.Schema(
   {
     fullName: {
@@ -48,6 +53,12 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+userSchema.pre('validate', function () {
+  if (this.role !== 'student') return;
+  const extractedStudentId = extractStudentIdFromEmail(this.email);
+  if (extractedStudentId) this.studentId = extractedStudentId;
+});
+
 // hash password before saving
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
@@ -58,5 +69,7 @@ userSchema.pre('save', async function () {
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
+
+userSchema.statics.extractStudentIdFromEmail = extractStudentIdFromEmail;
 
 module.exports = mongoose.model('User', userSchema);
