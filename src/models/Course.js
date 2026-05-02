@@ -17,6 +17,7 @@ const courseSchema = new mongoose.Schema(
     creditHours: { type: Number, default: 3 },
     sections: [sectionSchema],
     active: { type: Boolean, default: true },
+    joinCode: { type: String, unique: true, sparse: true, trim: true },
   },
   { timestamps: true }
 );

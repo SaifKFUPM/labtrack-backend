@@ -8,6 +8,8 @@ const {
   updateLab,
   deleteLab,
   publishLab,
+  getInstructorCourses,
+  createCourse,
 } = require("../controllers/instructor.controller");
 const {
   listSubmissions,
@@ -17,6 +19,10 @@ const {
 
 router.use(authMiddleware);
 router.use(checkRole("instructor"));
+
+// Course management
+router.get("/courses", getInstructorCourses);
+router.post("/courses", createCourse);
 
 router.get("/labs", getLabs);
 router.post("/labs", createLab);

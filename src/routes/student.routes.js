@@ -13,12 +13,14 @@ const {
   getSubmissionDetails,
   getProgress,
   updateProgress,
+  joinCourse,
 } = require("../controllers/student.controller");
 
 router.use(authMiddleware);
 router.use(checkRole("student"));
 
 router.get("/courses", getCourses);
+router.post("/courses/join", joinCourse);
 router.get("/labs", getLabs);
 router.get("/labs/:labId", getLabById);
 router.post("/submissions/:labId", submitLabCode);

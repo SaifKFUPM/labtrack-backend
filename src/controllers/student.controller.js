@@ -289,6 +289,41 @@ const saveVersion = asyncHandler(async (req, res) => {
   });
 });
 
+// POST /api/student/courses/join
+const joinCourse = asyncHandler(async (req, res) => {
+  const { joinCode } = req.body;
+
+  if (!joinCode) {
+    res.status(400);
+    throw new Error("joinCode is required");
+  }
+
+  const course = await Course.findOne({ joinCode: joinCode.toUpperCase(), active: true });
+  if (!course) {
+    res.status(404);
+    throw new Error("Invalid join code");
+  }
+
+  const section = course.sections[0];
+  if (!section) {
+    res.status(400);
+    throw new Error("This course has no sections yet");
+  }
+
+  const alreadyEnrolled = course.sections.some((s) =>
+    s.students.map((id) => id.toString()).includes(req.user._id.toString())
+  );
+  if (alreadyEnrolled) {
+    res.status(409);
+    throw new Error("You are already enrolled in this course");
+  }
+
+  section.students.push(req.user._id);
+  await course.save();
+
+  res.json({ success: true, data: course });
+});
+
 module.exports = {
   getCourses,
   getLabs,
@@ -300,4 +335,5 @@ module.exports = {
   updateProgress,
   saveVersion,
   getVersions,
+  joinCourse,
 };

@@ -1,5 +1,55 @@
 const asyncHandler = require("../utils/asyncHandler");
 const Lab = require("../models/Lab");
+const Course = require("../models/Course");
+
+const generateJoinCode = async () => {
+  let code, exists;
+  do {
+    code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    exists = await Course.findOne({ joinCode: code });
+  } while (exists);
+  return code;
+};
+
+// GET /api/instructor/courses
+const getInstructorCourses = asyncHandler(async (req, res) => {
+  const courses = await Course.find({
+    "sections.instructor": req.user._id,
+    active: true,
+  }).sort({ createdAt: -1 });
+
+  res.json({ success: true, data: courses });
+});
+
+// POST /api/instructor/courses
+const createCourse = asyncHandler(async (req, res) => {
+  const { code, name, department, semester, creditHours, sectionNumber } = req.body;
+
+  if (!code || !name || !department || !semester) {
+    res.status(400);
+    throw new Error("code, name, department, and semester are required");
+  }
+
+  const joinCode = await generateJoinCode();
+
+  const course = await Course.create({
+    code,
+    name,
+    department,
+    semester,
+    creditHours: creditHours || 3,
+    joinCode,
+    sections: [
+      {
+        sectionNumber: sectionNumber || "01",
+        instructor: req.user._id,
+        students: [],
+      },
+    ],
+  });
+
+  res.status(201).json({ success: true, data: course });
+});
 
 // GET /api/instructor/labs
 const getLabs = asyncHandler(async (req, res) => {
@@ -107,4 +157,6 @@ module.exports = {
   updateLab,
   deleteLab,
   publishLab,
+  getInstructorCourses,
+  createCourse,
 };
