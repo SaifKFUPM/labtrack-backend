@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const os = require('os');
 const Course = require('../models/Course');
 const Department = require('../models/Department');
 const Lab = require('../models/Lab');
@@ -7,6 +8,7 @@ const SystemLog = require('../models/SystemLog');
 const SystemSettings = require('../models/SystemSettings');
 const AuditLog = require('../models/AuditLog');
 const asyncHandler = require('../utils/asyncHandler');
+const requestMetrics = require('../utils/requestMetrics');
 
 const formatCourse = (c) => ({
   id: c._id,
@@ -278,10 +280,54 @@ const resolveSystemLog = asyncHandler(async (req, res) => {
   res.json({ success: true, data: { id: log._id, resolved: log.resolved } });
 });
 
+// DELETE /api/admin/system/logs/:logId
+const deleteSystemLog = asyncHandler(async (req, res) => {
+  const log = await SystemLog.findByIdAndDelete(req.params.logId);
+  if (!log) {
+    res.status(404);
+    throw new Error('Log not found');
+  }
+  res.json({ success: true, message: 'Log deleted' });
+});
+
 // DELETE /api/admin/system/logs
 const clearSystemLogs = asyncHandler(async (req, res) => {
-  await SystemLog.deleteMany({});
-  res.json({ success: true, message: 'All logs cleared' });
+  await SystemLog.deleteMany({ resolved: true });
+  res.json({ success: true, message: 'Resolved logs cleared' });
+});
+
+// GET /api/admin/system/metrics
+const getSystemMetrics = asyncHandler(async (req, res) => {
+  const requestStats = requestMetrics.snapshot();
+  const loadAverage = os.loadavg()[0] || 0;
+  const cpuCount = os.cpus().length || 1;
+  const memoryUsedPct = Math.round(((os.totalmem() - os.freemem()) / os.totalmem()) * 100);
+  const activeSince = new Date(Date.now() - 15 * 60 * 1000);
+
+  const [activeSessions, unresolvedLogs] = await Promise.all([
+    User.countDocuments({ status: 'active', lastLogin: { $gte: activeSince } }),
+    SystemLog.countDocuments({ resolved: false }),
+  ]);
+
+  const uptimeSec = Math.floor(process.uptime());
+  const days = Math.floor(uptimeSec / 86400);
+  const hours = Math.floor((uptimeSec % 86400) / 3600);
+  const minutes = Math.floor((uptimeSec % 3600) / 60);
+
+  res.json({
+    success: true,
+    data: {
+      cpu: Math.min(100, Math.round((loadAverage / cpuCount) * 100)),
+      memory: memoryUsedPct,
+      disk: null,
+      activeJobs: 0,
+      queuedJobs: 0,
+      uptime: `${days}d ${hours}h ${minutes}m`,
+      activeSessions,
+      unresolvedLogs,
+      ...requestStats,
+    },
+  });
 });
 
 // ─── Maintenance ──────────────────────────────────────────────────────────────
@@ -302,6 +348,7 @@ const updateMaintenance = asyncHandler(async (req, res) => {
   if (scheduledStart !== undefined) settings.maintenance.scheduledStart = scheduledStart;
   if (scheduledEnd !== undefined) settings.maintenance.scheduledEnd = scheduledEnd;
   if (allowAdminAccess !== undefined) settings.maintenance.allowAdminAccess = allowAdminAccess;
+  if (req.body.history !== undefined) settings.maintenance.history = req.body.history;
 
   settings.markModified('maintenance');
   await settings.save();
@@ -464,49 +511,100 @@ const clearAuditLogs = asyncHandler(async (req, res) => {
 
 // GET /api/admin/analytics
 const getAnalytics = asyncHandler(async (req, res) => {
-  const [userCount, courseCount, labCount, deptCount, allSubmissions] = await Promise.all([
-    User.countDocuments(),
-    Course.countDocuments(),
-    Lab.countDocuments(),
-    Department.countDocuments(),
+  const [users, courses, labs, departments, allSubmissions] = await Promise.all([
+    User.find().select('role status lastLogin'),
+    Course.find().select('code department sections'),
+    Lab.find().select('status courseId'),
+    Department.find().select('code name'),
     Submission.find().populate({ path: 'labId', select: 'courseId' }),
   ]);
 
+  const userStats = {
+    total: users.length,
+    active: users.filter((user) => user.status === 'active').length,
+    students: users.filter((user) => user.role === 'student').length,
+    instructors: users.filter((user) => user.role === 'instructor').length,
+    admins: users.filter((user) => user.role === 'admin').length,
+  };
+
+  const courseStats = {
+    total: courses.length,
+    sections: courses.reduce((sum, course) => sum + (course.sections || []).length, 0),
+    enrolled: courses.reduce((sum, course) => (
+      sum + (course.sections || []).reduce((sectionSum, section) => sectionSum + (section.students || []).length, 0)
+    ), 0),
+  };
+
+  const graded = allSubmissions.filter((submission) => submission.status === 'graded' && submission.score != null);
+  const labStats = {
+    total: labs.filter((lab) => lab.status === 'active').length,
+    submissions: allSubmissions.length,
+    avgGrade: graded.length
+      ? Math.round(graded.reduce((sum, submission) => sum + submission.score, 0) / graded.length)
+      : 0,
+  };
+
   // department-level submission counts via courseId -> course.department
-  const courses = await Course.find().select('_id department');
-  const courseTodept = Object.fromEntries(courses.map((c) => [c._id.toString(), c.department]));
+  const courseToDept = Object.fromEntries(courses.map((c) => [c._id.toString(), c.department]));
+  const deptNames = Object.fromEntries(departments.map((dept) => [dept.code, dept.name]));
 
   const deptSubMap = {};
+  const deptScoreMap = {};
   for (const sub of allSubmissions) {
     const courseId = sub.labId?.courseId?.toString();
-    const dept = courseTodept[courseId];
-    if (dept) deptSubMap[dept] = (deptSubMap[dept] || 0) + 1;
+    const dept = courseToDept[courseId];
+    if (!dept) continue;
+    deptSubMap[dept] = (deptSubMap[dept] || 0) + 1;
+    if (sub.score != null) {
+      if (!deptScoreMap[dept]) deptScoreMap[dept] = [];
+      deptScoreMap[dept].push(sub.score);
+    }
   }
-  const deptSubs = Object.entries(deptSubMap).map(([dept, count]) => ({ dept, count }));
+  const deptSubs = Object.entries(deptSubMap).map(([code, count]) => {
+    const scores = deptScoreMap[code] || [];
+    return {
+      code,
+      name: deptNames[code] || code,
+      subs: count,
+      avgGrade: scores.length ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length) : 0,
+    };
+  });
 
-  // weekly: submissions per day for the last 7 days
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const recentSubs = allSubmissions.filter((s) => s.submittedAt >= sevenDaysAgo);
-  const weeklyMap = {};
+  // weekly: submissions per week for the last 8 weeks
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  const eightWeeksAgo = new Date(Date.now() - 8 * weekMs);
+  const recentSubs = allSubmissions.filter((s) => s.submittedAt >= eightWeeksAgo);
+  const weeklyMap = new Map();
   for (const sub of recentSubs) {
-    const day = sub.submittedAt?.toISOString().slice(0, 10);
-    if (day) weeklyMap[day] = (weeklyMap[day] || 0) + 1;
+    if (!sub.submittedAt) continue;
+    const weekStart = new Date(sub.submittedAt);
+    weekStart.setHours(0, 0, 0, 0);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    const key = weekStart.toISOString().slice(0, 10);
+    weeklyMap.set(key, (weeklyMap.get(key) || 0) + 1);
   }
-  const weekly = Object.entries(weeklyMap)
-    .map(([date, count]) => ({ date, count }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  const weekly = Array.from(weeklyMap.entries())
+    .map(([week, submissions]) => ({ week, submissions }))
+    .sort((a, b) => a.week.localeCompare(b.week));
 
   // language usage
   const langMap = {};
   for (const sub of allSubmissions) {
     if (sub.language) langMap[sub.language] = (langMap[sub.language] || 0) + 1;
   }
-  const langs = Object.entries(langMap).map(([lang, count]) => ({ lang, count }));
+  const palette = ['#60a5fa', '#a78bfa', '#34d399', '#fbbf24', '#fb923c', '#f87171'];
+  const totalLanguageSubmissions = Object.values(langMap).reduce((sum, count) => sum + count, 0) || 1;
+  const langs = Object.entries(langMap).map(([lang, count], index) => ({
+    lang,
+    count,
+    pct: Math.round((count / totalLanguageSubmissions) * 100),
+    color: palette[index % palette.length],
+  }));
 
   res.json({
     success: true,
     data: {
-      stats: { users: userCount, courses: courseCount, labs: labCount, depts: deptCount },
+      stats: { users: userStats, courses: courseStats, labs: labStats },
       deptSubs,
       weekly,
       langs,
@@ -553,6 +651,24 @@ const getAnalyticsReports = asyncHandler(async (req, res) => {
   res.json({ success: true, data });
 });
 
+// DELETE /api/admin/analytics/reports/:reportId
+const deleteAnalyticsReport = asyncHandler(async (req, res) => {
+  const settings = await SystemSettings.getSingleton();
+  const before = settings.analyticsReports.length;
+  settings.analyticsReports = settings.analyticsReports.filter(
+    (report) => report._id.toString() !== req.params.reportId,
+  );
+
+  if (settings.analyticsReports.length === before) {
+    res.status(404);
+    throw new Error('Report not found');
+  }
+
+  settings.markModified('analyticsReports');
+  await settings.save();
+  res.json({ success: true, message: 'Report deleted' });
+});
+
 module.exports = {
   getUsers,
   createUser,
@@ -567,7 +683,9 @@ module.exports = {
   updateDepartment,
   getSystemLogs,
   resolveSystemLog,
+  deleteSystemLog,
   clearSystemLogs,
+  getSystemMetrics,
   getMaintenance,
   updateMaintenance,
   getBackups,
@@ -584,4 +702,5 @@ module.exports = {
   getAnalytics,
   createAnalyticsReport,
   getAnalyticsReports,
+  deleteAnalyticsReport,
 };

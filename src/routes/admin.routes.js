@@ -16,7 +16,9 @@ const {
   updateDepartment,
   getSystemLogs,
   resolveSystemLog,
+  deleteSystemLog,
   clearSystemLogs,
+  getSystemMetrics,
   getMaintenance,
   updateMaintenance,
   getBackups,
@@ -33,6 +35,7 @@ const {
   getAnalytics,
   createAnalyticsReport,
   getAnalyticsReports,
+  deleteAnalyticsReport,
 } = require('../controllers/admin.controller');
 
 router.use(authMiddleware, checkRole('admin'));
@@ -57,7 +60,9 @@ router.patch('/departments/:deptId', updateDepartment);
 // System Logs
 router.get('/system/logs', getSystemLogs);
 router.patch('/system/logs/:logId', resolveSystemLog);
+router.delete('/system/logs/:logId', deleteSystemLog);
 router.delete('/system/logs', clearSystemLogs);
+router.get('/system/metrics', getSystemMetrics);
 
 // Maintenance
 router.get('/system/maintenance', getMaintenance);
@@ -88,5 +93,6 @@ router.delete('/audit-logs', clearAuditLogs);
 router.get('/analytics', getAnalytics);
 router.post('/analytics/reports', createAnalyticsReport);
 router.get('/analytics/reports', getAnalyticsReports);
+router.delete('/analytics/reports/:reportId', deleteAnalyticsReport);
 
 module.exports = router;

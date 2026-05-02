@@ -10,6 +10,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const errorMiddleware = require("./src/middleware/errorMiddleware");
+const requestMetrics = require("./src/utils/requestMetrics");
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(cors({ origin: process.env.FRONTEND_URL || "*" }));
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
+app.use(requestMetrics);
 
 // health check
 app.get("/api/health", (req, res) => {

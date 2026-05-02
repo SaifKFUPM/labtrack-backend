@@ -87,6 +87,7 @@ const systemSettingsSchema = new mongoose.Schema(
           message: String,
           start: Date,
           end: Date,
+          duration: String,
         },
       ],
     },
