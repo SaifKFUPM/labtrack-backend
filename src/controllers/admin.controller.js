@@ -32,7 +32,15 @@ const formatCourse = (c) => ({
 
 // GET /api/admin/users
 const getUsers = asyncHandler(async (req, res) => {
-  const users = await User.find().select('-password').sort({ createdAt: -1 });
+  const [users, submissionCounts] = await Promise.all([
+    User.find().select('-password').sort({ createdAt: -1 }),
+    Submission.aggregate([
+      { $group: { _id: '$studentId', count: { $sum: 1 } } },
+    ]),
+  ]);
+  const submissionCountByUser = Object.fromEntries(
+    submissionCounts.map((item) => [item._id.toString(), item.count]),
+  );
 
   const data = users.map((u) => ({
     id: u._id,
@@ -43,6 +51,7 @@ const getUsers = asyncHandler(async (req, res) => {
     studentId: u.studentId,
     status: u.status,
     lastLogin: u.lastLogin,
+    submissionCount: submissionCountByUser[u._id.toString()] || 0,
     createdAt: u.createdAt,
   }));
 
