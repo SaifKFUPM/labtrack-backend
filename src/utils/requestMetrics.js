@@ -1,9 +1,9 @@
 const WINDOW_MS = 5 * 60 * 1000;
-const samples = [];
+const measurements = [];
 
 function trimSamples(now = Date.now()) {
-  while (samples.length && now - samples[0].ts > WINDOW_MS) {
-    samples.shift();
+  while (measurements.length && now - measurements[0].ts > WINDOW_MS) {
+    measurements.shift();
   }
 }
 
@@ -12,7 +12,7 @@ function requestMetrics(req, res, next) {
 
   res.on('finish', () => {
     const now = Date.now();
-    samples.push({
+    measurements.push({
       ts: now,
       statusCode: res.statusCode,
       durationMs: now - startedAt,
@@ -25,9 +25,9 @@ function requestMetrics(req, res, next) {
 
 requestMetrics.snapshot = () => {
   trimSamples();
-  const count = samples.length;
-  const errors = samples.filter((sample) => sample.statusCode >= 500).length;
-  const totalDuration = samples.reduce((sum, sample) => sum + sample.durationMs, 0);
+  const count = measurements.length;
+  const errors = measurements.filter((measurement) => measurement.statusCode >= 500).length;
+  const totalDuration = measurements.reduce((sum, measurement) => sum + measurement.durationMs, 0);
 
   return {
     requestsMin: Math.round(count / (WINDOW_MS / 60000)),
