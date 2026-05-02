@@ -10,6 +10,65 @@ const AuditLog = require('../models/AuditLog');
 const asyncHandler = require('../utils/asyncHandler');
 const requestMetrics = require('../utils/requestMetrics');
 
+const DAY_NAMES = new Set(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
+
+const parseMeetingSchedule = (value) => {
+  const raw = Array.isArray(value) ? value.join('/') : String(value || '').trim();
+  if (!raw) return { meetingDays: [], startTime: '', endTime: '' };
+
+  const match = raw.match(/^(.*?)\s+(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})$/);
+  const daysPart = match ? match[1] : raw;
+  const meetingDays = daysPart
+    .split(/[,\s/]+/)
+    .map((day) => day.trim())
+    .filter((day) => DAY_NAMES.has(day));
+
+  return {
+    meetingDays,
+    startTime: match?.[2] || '',
+    endTime: match?.[3] || '',
+  };
+};
+
+const normalizeMeetingDays = (section) => {
+  if (Array.isArray(section.meetingDays)) {
+    return section.meetingDays.filter(Boolean);
+  }
+  if (section.meetingDays) {
+    return parseMeetingSchedule(section.meetingDays).meetingDays;
+  }
+  return parseMeetingSchedule(section.meetingTimes).meetingDays;
+};
+
+const buildMeetingTimes = (section) => {
+  if (typeof section.meetingTimes === 'string' && section.meetingTimes.trim()) {
+    return section.meetingTimes.trim();
+  }
+  const days = normalizeMeetingDays(section);
+  const startTime = section.startTime || parseMeetingSchedule(section.meetingTimes).startTime;
+  const endTime = section.endTime || parseMeetingSchedule(section.meetingTimes).endTime;
+  const dayText = days.join('/');
+  if (dayText && startTime && endTime) return `${dayText} ${startTime}-${endTime}`;
+  return dayText;
+};
+
+const mapSectionInput = (section) => {
+  const parsed = parseMeetingSchedule(section.meetingTimes);
+  const mapped = {
+    sectionNumber: section.sectionNumber,
+    instructor: section.instructorId || null,
+    students: section.enrolledStudentIds || [],
+    capacity: section.capacity,
+    meetingDays: normalizeMeetingDays(section),
+    startTime: section.startTime || parsed.startTime,
+    endTime: section.endTime || parsed.endTime,
+    meetingTimes: buildMeetingTimes(section),
+  };
+
+  if (section.id || section._id) mapped._id = section.id || section._id;
+  return mapped;
+};
+
 const formatCourse = (c) => ({
   id: c._id,
   courseCode: c.code,
@@ -18,10 +77,14 @@ const formatCourse = (c) => ({
   creditHours: c.creditHours,
   semester: c.semester,
   sections: (c.sections || []).map((s) => ({
+    id: s._id,
     sectionNumber: s.sectionNumber,
     instructorId: s.instructor,
     enrolledStudentIds: s.students,
-    meetingDays: s.meetingTimes,
+    meetingDays: normalizeMeetingDays(s),
+    startTime: s.startTime || parseMeetingSchedule(s.meetingTimes).startTime,
+    endTime: s.endTime || parseMeetingSchedule(s.meetingTimes).endTime,
+    meetingTimes: buildMeetingTimes(s),
     capacity: s.capacity,
   })),
   active: c.active,
@@ -158,13 +221,7 @@ const createCourse = asyncHandler(async (req, res) => {
     throw new Error('courseCode, name, department, and semester are required');
   }
 
-  const mappedSections = (sections || []).map((s) => ({
-    sectionNumber: s.sectionNumber,
-    instructor: s.instructorId,
-    students: s.enrolledStudentIds || [],
-    capacity: s.capacity,
-    meetingTimes: s.meetingDays,
-  }));
+  const mappedSections = (sections || []).map(mapSectionInput);
 
   const course = await Course.create({
     code: courseCode,
@@ -194,13 +251,7 @@ const updateCourse = asyncHandler(async (req, res) => {
   if (creditHours !== undefined) course.creditHours = creditHours;
   if (semester !== undefined) course.semester = semester;
   if (sections !== undefined) {
-    course.sections = sections.map((s) => ({
-      sectionNumber: s.sectionNumber,
-      instructor: s.instructorId,
-      students: s.enrolledStudentIds || [],
-      capacity: s.capacity,
-      meetingTimes: s.meetingDays,
-    }));
+    course.sections = sections.map(mapSectionInput);
   }
 
   await course.save();

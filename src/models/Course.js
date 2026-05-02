@@ -5,6 +5,9 @@ const sectionSchema = new mongoose.Schema({
   instructor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   capacity: { type: Number, default: 50 },
+  meetingDays: [{ type: String }],
+  startTime: { type: String },
+  endTime: { type: String },
   meetingTimes: { type: String },
 });
 
