@@ -430,6 +430,7 @@ const ensureKnownUsers = async () => {
     }
 
     user.password = PASSWORD;
+    user.markModified("password");
     user.status = "active";
     user.active = true;
     await user.save();
