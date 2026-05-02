@@ -11,6 +11,83 @@ const generateJoinCode = async () => {
   return code;
 };
 
+const getDefaultSolutionFileName = (language) => {
+  const normalized = String(language || "").toLowerCase();
+  if (normalized.includes("python")) return "main.py";
+  if (normalized.includes("java") && !normalized.includes("script")) return "Main.java";
+  if (normalized.includes("javascript")) return "main.js";
+  if (normalized.includes("c++") || normalized.includes("cpp")) return "main.cpp";
+  if (normalized === "c") return "main.c";
+  if (normalized.includes("go")) return "main.go";
+  if (normalized.includes("rust")) return "main.rs";
+  return "solution.txt";
+};
+
+const getFirstFileContent = (files) => {
+  if (!files || Array.isArray(files) || typeof files !== "object") return "";
+  return Object.values(files).find((content) => typeof content === "string" && content.trim()) || "";
+};
+
+const normalizeTestCases = (testCases = []) =>
+  testCases.map((testCase, index) => {
+    const type = testCase.type || testCase.visibility;
+    return {
+      name: testCase.name || `Test Case ${index + 1}`,
+      description: testCase.description || testCase.name || `Test Case ${index + 1}`,
+      input: testCase.input ?? testCase.expectedInput ?? "",
+      expectedOutput: testCase.expectedOutput ?? "",
+      points: Number.parseInt(testCase.points, 10) || 1,
+      visible: testCase.visible ?? type !== "hidden",
+      timeoutSeconds: Number.parseInt(testCase.timeoutSeconds ?? testCase.timeout, 10) || 5,
+      order: Number.isInteger(Number(testCase.order)) ? Number(testCase.order) : index + 1,
+      verified: Boolean(testCase.verified),
+    };
+  });
+
+const normalizeSolutions = (solutions = []) =>
+  solutions.map((solution, index) => {
+    const files =
+      solution.files && !Array.isArray(solution.files) && typeof solution.files === "object"
+        ? solution.files
+        : solution.code
+          ? { [getDefaultSolutionFileName(solution.language)]: solution.code }
+          : {};
+    const code = solution.code ?? getFirstFileContent(files);
+
+    return {
+      type: solution.type === "top_student" ? "top_student" : "instructor",
+      title: solution.title?.trim() || `Solution ${index + 1}`,
+      language: solution.language,
+      code: code || "",
+      files,
+      explanation: solution.explanation || "",
+      unlockedAt: solution.unlockedAt || solution.releaseDate || undefined,
+      publishedAt: solution.publishedAt || undefined,
+      releaseMode: solution.releaseMode || "after_graded",
+      status: solution.status || (solution.publishedAt ? "published" : "scheduled"),
+    };
+  });
+
+const buildLabUpdate = (body) => {
+  const updates = { ...body };
+  if (body.testCases !== undefined) updates.testCases = normalizeTestCases(body.testCases);
+  if (body.solutions !== undefined) updates.solutions = normalizeSolutions(body.solutions);
+  return updates;
+};
+
+const formatLab = (lab) => {
+  const obj = lab.toObject ? lab.toObject() : lab;
+  const course = obj.courseId && typeof obj.courseId === "object" ? obj.courseId : null;
+  return {
+    ...obj,
+    id: obj._id,
+    courseId: course?._id || obj.courseId,
+    courseCode: course?.code,
+    courseName: course?.name,
+    semester: course?.semester,
+  };
+};
+
 // GET /api/instructor/courses
 const getInstructorCourses = asyncHandler(async (req, res) => {
   const courses = await Course.find({
@@ -53,25 +130,35 @@ const createCourse = asyncHandler(async (req, res) => {
 
 // GET /api/instructor/labs
 const getLabs = asyncHandler(async (req, res) => {
-  const labs = await Lab.find({ createdBy: req.user._id }).sort({
-    createdAt: -1,
-  });
-  res.json({ success: true, data: labs });
+  const query = { createdBy: req.user._id };
+  if (req.query.status && req.query.status !== "all") {
+    query.status = req.query.status;
+  }
+
+  const labs = await Lab.find(query)
+    .populate("courseId", "code name semester")
+    .sort({ createdAt: -1 });
+  res.json({ success: true, data: labs.map(formatLab) });
+});
+
+// GET /api/instructor/labs/:labId
+const getLabById = asyncHandler(async (req, res) => {
+  const lab = await Lab.findById(req.params.labId).populate("courseId", "code name semester");
+  if (!lab) {
+    res.status(404);
+    throw new Error("Lab not found");
+  }
+  if (lab.createdBy.toString() !== req.user._id.toString()) {
+    res.status(403);
+    throw new Error("Not authorized to view this lab");
+  }
+
+  res.json({ success: true, data: formatLab(lab) });
 });
 
 // POST /api/instructor/labs
 const createLab = asyncHandler(async (req, res) => {
-  const {
-    title,
-    labNumber,
-    instructions,
-    dueDate,
-    points,
-    difficulty,
-    languages,
-    testCases,
-    solutions,
-  } = req.body;
+  const { title, labNumber, instructions, dueDate, points, difficulty, languages } = req.body;
   if (!title || !labNumber || !instructions || !dueDate || !points) {
     res.status(400);
     throw new Error("Missing required lab fields");
@@ -89,11 +176,12 @@ const createLab = asyncHandler(async (req, res) => {
     starterCode: req.body.starterCode || "",
     status: req.body.status || "draft",
     createdBy: req.user._id,
-    testCases: testCases || [],
-    solutions: solutions || [],
+    testCases: normalizeTestCases(req.body.testCases || []),
+    solutions: normalizeSolutions(req.body.solutions || []),
   });
 
-  res.status(201).json({ success: true, data: lab });
+  await lab.populate("courseId", "code name semester");
+  res.status(201).json({ success: true, data: formatLab(lab) });
 });
 
 // PATCH /api/instructor/labs/:labId
@@ -108,11 +196,12 @@ const updateLab = asyncHandler(async (req, res) => {
     throw new Error("Not authorized to update this lab");
   }
 
-  const updates = req.body;
+  const updates = buildLabUpdate(req.body);
   Object.assign(lab, updates);
   await lab.save();
+  await lab.populate("courseId", "code name semester");
 
-  res.json({ success: true, data: lab });
+  res.json({ success: true, data: formatLab(lab) });
 });
 
 // DELETE /api/instructor/labs/:labId
@@ -127,7 +216,7 @@ const deleteLab = asyncHandler(async (req, res) => {
     throw new Error("Not authorized to delete this lab");
   }
 
-  await lab.remove();
+  await lab.deleteOne();
   res.json({ success: true, message: "Lab deleted" });
 });
 
@@ -145,14 +234,16 @@ const publishLab = asyncHandler(async (req, res) => {
 
   lab.status = req.body.status || "active";
   await lab.save();
+  await lab.populate("courseId", "code name semester");
 
   // Note: email notifications can be triggered here when email.service is implemented
 
-  res.json({ success: true, data: lab });
+  res.json({ success: true, data: formatLab(lab) });
 });
 
 module.exports = {
   getLabs,
+  getLabById,
   createLab,
   updateLab,
   deleteLab,

@@ -4,6 +4,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 const checkRole = require("../middleware/roleMiddleware");
 const {
   getLabs,
+  getLabById,
   createLab,
   updateLab,
   deleteLab,
@@ -26,6 +27,7 @@ router.post("/courses", createCourse);
 
 router.get("/labs", getLabs);
 router.post("/labs", createLab);
+router.get("/labs/:labId", getLabById);
 router.patch("/labs/:labId", updateLab);
 router.delete("/labs/:labId", deleteLab);
 router.patch("/labs/:labId/publish", publishLab);

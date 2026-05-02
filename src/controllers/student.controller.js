@@ -6,6 +6,54 @@ const Version = require("../models/Version");
 const Progress = require("../models/Progress");
 const asyncHandler = require("../utils/asyncHandler");
 
+const addDays = (date, days) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+
+const shouldExposeSolutions = (lab, submission) => {
+  if (!submission || !["submitted", "graded"].includes(submission.status)) return false;
+  if (!lab.dueDate) return false;
+  return addDays(new Date(lab.dueDate), 2) <= new Date();
+};
+
+const filesFromSubmission = (submission) => {
+  if (!submission) return null;
+  const ext = String(submission.language || "").toLowerCase().includes("java") ? "java"
+    : String(submission.language || "").toLowerCase().includes("c++") || String(submission.language || "").toLowerCase().includes("cpp") ? "cpp"
+      : String(submission.language || "").toLowerCase().includes("javascript") ? "js"
+        : "py";
+  return { [`submission.${ext}`]: submission.code || "" };
+};
+
+const formatCourse = (course) => ({
+  ...course.toObject(),
+  id: course._id,
+  courseCode: course.code,
+});
+
+const formatLabForStudent = (lab, course, submission) => {
+  const exposeSolutions = shouldExposeSolutions(lab, submission);
+  const obj = lab.toObject ? lab.toObject() : lab;
+  return {
+    ...obj,
+    id: obj._id,
+    courseId: course?._id || obj.courseId,
+    courseCode: course?.code,
+    courseName: course?.name,
+    submissionStatus: submission ? submission.status : "not_started",
+    submittedAt: submission ? submission.submittedAt : null,
+    score: submission ? submission.score : null,
+    solutions: exposeSolutions ? obj.solutions || [] : [],
+    submission: submission
+      ? {
+          id: submission._id,
+          status: submission.status,
+          submittedAt: submission.submittedAt,
+          files: filesFromSubmission(submission),
+        }
+      : null,
+    studentSolution: submission ? { files: filesFromSubmission(submission) } : null,
+  };
+};
+
 // GET /api/student/courses?enrolled=true
 const getCourses = asyncHandler(async (req, res) => {
   const enrolledOnly = req.query.enrolled === "true";
@@ -13,9 +61,9 @@ const getCourses = asyncHandler(async (req, res) => {
     ? { "sections.students": req.user._id, active: true }
     : { active: true };
 
-  const courses = await Course.find(query).sort({ courseCode: 1 });
+  const courses = await Course.find(query).sort({ code: 1 });
 
-  res.json({ success: true, data: courses });
+  res.json({ success: true, data: courses.map(formatCourse) });
 });
 
 // GET /api/student/labs?status=active
@@ -25,13 +73,14 @@ const getLabs = asyncHandler(async (req, res) => {
   const enrolledCourses = await Course.find({
     "sections.students": req.user._id,
     active: true,
-  }).select("_id");
+  });
 
   if (!enrolledCourses.length) {
     return res.json({ success: true, data: [] });
   }
 
   const courseIds = enrolledCourses.map((course) => course._id);
+  const courseById = new Map(enrolledCourses.map((course) => [course._id.toString(), course]));
 
   const labs = await Lab.find({
     courseId: { $in: courseIds },
@@ -45,11 +94,7 @@ const getLabs = asyncHandler(async (req, res) => {
         labId: lab._id,
       });
 
-      return {
-        ...lab.toObject(),
-        submissionStatus: submission ? submission.status : "not started",
-        submittedAt: submission ? submission.submittedAt : null,
-      };
+      return formatLabForStudent(lab, courseById.get(lab.courseId.toString()), submission);
     }),
   );
 
@@ -76,7 +121,12 @@ const getLabById = asyncHandler(async (req, res) => {
     throw new Error("You do not have access to this lab");
   }
 
-  res.json({ success: true, data: lab });
+  const submission = await Submission.findOne({
+    labId: lab._id,
+    studentId: req.user._id,
+  });
+
+  res.json({ success: true, data: formatLabForStudent(lab, allowedCourse, submission) });
 });
 
 // POST /api/student/submissions/:labId
