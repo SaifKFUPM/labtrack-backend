@@ -1,14 +1,25 @@
 const axios = require('axios');
 
 const languageMap = {
+  'c++': 'cpp17',
+  cpp17: 'cpp17',
   cpp: 'cpp17',
   c: 'c',
   java: 'java',
   python: 'python3',
+  python3: 'python3',
+  javascript: 'nodejs',
+  js: 'nodejs',
+  node: 'nodejs',
+  nodejs: 'nodejs',
+  go: 'go',
+  golang: 'go',
+  rust: 'rust',
 };
 
 const compileCode = async (code, language, input = '') => {
-  const jdoodleLanguage = languageMap[language];
+  const normalizedLanguage = String(language || '').trim().toLowerCase();
+  const jdoodleLanguage = languageMap[normalizedLanguage];
   if (!jdoodleLanguage) {
     throw new Error(`Unsupported language: ${language}`);
   }

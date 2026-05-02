@@ -167,14 +167,18 @@ const submitLabCode = asyncHandler(async (req, res) => {
     { upsert: true, new: true },
   );
 
-  const testResults = await runTests(submission._id);
+  const testSummary = await runTests(submission._id);
 
   res.json({
     success: true,
     data: {
       id: submission._id,
       status: submission.status,
-      testResults,
+      testResults: testSummary.results,
+      passed: testSummary.passed,
+      total: testSummary.total,
+      score: testSummary.score,
+      maxScore: testSummary.maxScore,
     },
   });
 });

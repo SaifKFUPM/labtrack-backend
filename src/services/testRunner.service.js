@@ -34,7 +34,9 @@ const runTests = async (submissionId) => {
         testCaseId: tc._id,
         description: tc.description,
         passed: false,
+        status: "fail",
         points: 0,
+        earned: 0,
         visible: tc.visible,
         ...(tc.visible && {
           input: tc.input,
@@ -58,7 +60,9 @@ const runTests = async (submissionId) => {
       testCaseId: tc._id,
       description: tc.description,
       passed: isPassed,
+      status: isPassed ? "pass" : "fail",
       points: isPassed ? tc.points : 0,
+      earned: isPassed ? tc.points : 0,
       visible: tc.visible,
       ...(tc.visible && {
         input: tc.input,
