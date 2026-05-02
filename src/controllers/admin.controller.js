@@ -159,7 +159,7 @@ const createUser = asyncHandler(async (req, res) => {
 
 // PATCH /api/admin/users/:userId
 const updateUser = asyncHandler(async (req, res) => {
-  const { role, department, status } = req.body;
+  const { fullName, email, role, department, studentId, status } = req.body;
 
   const user = await User.findById(req.params.userId);
   if (!user) {
@@ -167,8 +167,25 @@ const updateUser = asyncHandler(async (req, res) => {
     throw new Error('User not found');
   }
 
+  if (fullName !== undefined) {
+    if (!String(fullName).trim()) {
+      res.status(400);
+      throw new Error('Full name cannot be empty');
+    }
+    user.fullName = String(fullName).trim();
+  }
+  if (email !== undefined) {
+    const nextEmail = String(email).trim().toLowerCase();
+    const existing = await User.findOne({ email: nextEmail, _id: { $ne: user._id } });
+    if (existing) {
+      res.status(409);
+      throw new Error('User with this email already exists');
+    }
+    user.email = nextEmail;
+  }
   if (role !== undefined) user.role = role;
   if (department !== undefined) user.department = department;
+  if (studentId !== undefined) user.studentId = String(studentId || '').trim();
   if (status !== undefined) {
     user.status = status;
     user.active = status === 'active';
